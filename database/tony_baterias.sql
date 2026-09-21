@@ -130,7 +130,7 @@ CREATE INDEX idx_pedidos_status_data  ON pedidos(status, criado_em);
 CREATE INDEX idx_itens_pedido         ON itens_pedido(pedido_id);
 
 INSERT INTO usuarios (nome, email, senha, perfil) VALUES
-('Administrador', 'admin@tonybaterias.com', '123456', 'admin');
+('Tony', 'admin@tonybaterias.com', '123456', 'admin');
 
 INSERT INTO categorias (nome) VALUES
 ('Baterias automotivas'),
