@@ -33,7 +33,7 @@ unset($_SESSION['erro_login']);
             <form method="POST" action="login.php">
                 <div class="campo">
                     <label for="email">E-mail</label>
-                    <input type="email" id="email" name="email" required autofocus placeholder="seu@email.com">
+                    <input type="email" id="email" name="email" required autofocus placeholder="seu.email@exemplo.com">
                 </div>
                 <div class="campo">
                     <label for="senha">Senha</label>
