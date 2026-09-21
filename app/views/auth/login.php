@@ -21,7 +21,7 @@ unset($_SESSION['erro_login']);
             <img src="assets/img/logo-redonda.jpg" alt="Logo Tony Baterias">
             <div class="cartao-login__marca">
                 <h1><span class="baterias">LOGIN</span></h1>
-                <p>Painel de gestão da loja</p>
+                <p>Gestão da Loja</p>
             </div>
             
             <?php if ($erro): ?>
