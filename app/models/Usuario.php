@@ -35,3 +35,19 @@ public function listarTodos(): array
     
     return $this->db->query($sql)->fetchAll();
 }
+
+public function buscarPorId(int $id): ?array
+{
+
+    $sql = 'SELECT id, nome, email, perfil, ativo
+            FROM usuarios
+            WHERE id = :id AND ativo = 1';
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->bindvalue(':id', $id, PDO::PARAM_INT);
+    $stmt->execute();
+
+    $usuarios = $stmt->fetch();
+    return $usuario ?: null;
+}
+
