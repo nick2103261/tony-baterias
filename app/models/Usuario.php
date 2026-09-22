@@ -51,3 +51,16 @@ public function buscarPorId(int $id): ?array
     return $usuario ?: null;
 }
 
+public function criar(array $dados): int 
+{
+    $sql = 'INSERT INTO usuarios (nome, email, senha, perfil)
+            VALUES (:nome, :email, :senha, :perfil)';
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([
+        ':nome' => $dados['nome'],
+        ':email' => $dados['email'],
+        ':senha' => $dados['senha']
+        ':perfil' => $dados['perfil']
+    ])
+    return (int) $lastInsertId();
+}
