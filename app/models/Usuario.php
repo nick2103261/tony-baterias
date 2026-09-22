@@ -25,3 +25,13 @@ class Usuario
         return $usuario ?: null;
     }
 }
+
+public function listarTodos(): array
+{
+    $sql = 'SELECT id, nome, email, perfil, ativo
+            FROM usuarios
+            WHERE ativo = 1
+            ORDER BY nome';
+    
+    return $this->db->query($sql)->fetchAll();
+}
