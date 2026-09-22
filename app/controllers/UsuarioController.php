@@ -40,6 +40,16 @@ class UsuarioController
             return ['sucesso' => false, 'mensagem' => 'Selecione um perfil válido.'];
 
         }
+
+        try {
+            if ($id === null) {
+                if ($senha === '') {
+                    return ['sucesso' => false, 'mensagem' => 'A senha é obrigatória para novos usuários.'];
+
+                }
+                
+            }
+        }
     }
 
 }
