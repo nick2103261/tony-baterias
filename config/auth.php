@@ -12,3 +12,13 @@ function exigirLogin(): void
         exit;
     }
 }
+
+function exigirAdmin(): void
+{
+    exigirLogin();
+
+    if(($_SESSION['usuario_perfil'] ?? null) !== 'admin') {
+        header('Location: ' . BASE_URL . '/dashboard.php');
+        exit;
+    }
+}
