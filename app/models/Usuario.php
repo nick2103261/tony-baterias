@@ -58,10 +58,10 @@ class Usuario
         $stmt->execute([
             ':nome' => $dados['nome'],
             ':email' => $dados['email'],
-            ':senha' => $dados['senha']
-            ':perfil' => $dados['perfil']
-        ])
-        return (int) $lastInsertId();
+            ':senha' => $dados['senha'],
+            ':perfil' => $dados['perfil'],
+        ]);
+        return (int) $this->db->lastInsertId();
     }
 
     public function atualizar(int $id, array $dados): void
