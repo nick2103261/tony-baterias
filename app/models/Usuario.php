@@ -47,7 +47,7 @@ public function buscarPorId(int $id): ?array
     $stmt->bindvalue(':id', $id, PDO::PARAM_INT);
     $stmt->execute();
 
-    $usuarios = $stmt->fetch();
+    $usuario = $stmt->fetch();
     return $usuario ?: null;
 }
 
@@ -63,4 +63,18 @@ public function criar(array $dados): int
         ':perfil' => $dados['perfil']
     ])
     return (int) $lastInsertId();
+}
+
+public function atualizar(int $id, array $dados): void
+{
+    $sql = 'UPDATE usuarios
+            SET nome = :nome, email = :email, perfil = :perfil
+            WHERE id = :id';
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([
+        ':nome' => $dados['nome'],
+        ':email' => $dados['email'],
+        ':perfil' => $dados['perfil'],
+        ':id' => $id,
+    ]);
 }
