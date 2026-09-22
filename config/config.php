@@ -1,6 +1,6 @@
 <?php
 define('DB_HOST', '127.0.0.1');
-define('DB_PORT', '3308');
+define('DB_PORT', '3306');
 define('DB_NAME', 'tony_baterias');
 define('DB_USER', 'root');
 define('DB_PASS', '');
