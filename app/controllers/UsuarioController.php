@@ -47,9 +47,38 @@ class UsuarioController
                     return ['sucesso' => false, 'mensagem' => 'A senha é obrigatória para novos usuários.'];
 
                 }
-                
+
+                $dados = [
+                    'nome' => $nome,
+                    'email' => $email,
+                    'senha' => password_hash($senha, PASSWORD_DEFAULT),
+                    'perfil' => $perfil,
+                ];
+
+                $this->usuarioModel->criar($dados);
+                return ['sucesso' => true, 'mensagem' => 'Usuário cadastrado com sucesso.'];
             }
+            
+            $dados = [
+                'nome'   => $nome,
+                'email'  => $email,
+                'perfil' => $perfil,
+            ];
+
+            $this->usuarioModel->atualizar($id, $dados);
+            return ['sucesso' => true, 'mensagem' => 'Usuário atualizado com sucesso.'];
+        } catch (PDOException $e) {
+            if ($e->getCode() === '23000') {
+                return ['sucesso' => false, 'mensagem' => 'Já existe um usuário com esse e-mail.'];
+            }
+            throw $e;
         }
     }
 
+    public function excluir(int $id): void
+    {
+        $this->usuarioModel->inativar($id);
+    }
+        
 }
+
