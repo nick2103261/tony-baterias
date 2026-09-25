@@ -36,7 +36,7 @@ unset($_SESSION['erro_login']);
                     <input type="email" id="email" name="email" required autofocus placeholder="seu.email@exemplo.com">
                 </div>
                 <div class="campo">
-                    <label for="senha">Senha</label>
+                    <label for="senha">Teste kkkkkj</label>
                     <input type="password" id="senha" name="senha" required placeholder="••••••••">
                 </div>
                 <button type="submit" class="btn btn-primario">
