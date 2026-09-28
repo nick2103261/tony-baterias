@@ -2,8 +2,8 @@
 -- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1:3308
--- Tempo de geração: 21/09/2026 às 15:16
+-- Host: 127.0.0.1:3306
+-- Tempo de geração: 28/09/2026 às 21:19
 -- Versão do servidor: 8.4.7
 -- Versão do PHP: 8.3.28
 
@@ -30,7 +30,7 @@ SET time_zone = "+00:00";
 DROP TABLE IF EXISTS `categorias`;
 CREATE TABLE IF NOT EXISTS `categorias` (
   `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
-  `nome` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nome` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nome` (`nome`)
@@ -55,12 +55,12 @@ INSERT INTO `categorias` (`id`, `nome`, `criado_em`) VALUES
 DROP TABLE IF EXISTS `clientes`;
 CREATE TABLE IF NOT EXISTS `clientes` (
   `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
-  `nome` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `cpf` varchar(14) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `cnpj` varchar(18) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `telefone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `endereco` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nome` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cpf` varchar(14) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cnpj` varchar(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `telefone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `endereco` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `ativo` tinyint(1) NOT NULL DEFAULT '1',
   `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `atualizado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -87,9 +87,9 @@ INSERT INTO `clientes` (`id`, `nome`, `cpf`, `cnpj`, `telefone`, `email`, `ender
 DROP TABLE IF EXISTS `fornecedores`;
 CREATE TABLE IF NOT EXISTS `fornecedores` (
   `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
-  `nome` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `contato` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `cnpj` varchar(18) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nome` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `contato` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cnpj` varchar(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `ativo` tinyint(1) NOT NULL DEFAULT '1',
   `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `atualizado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -136,9 +136,9 @@ CREATE TABLE IF NOT EXISTS `movimentacoes_estoque` (
   `produto_id` int UNSIGNED NOT NULL,
   `usuario_id` int UNSIGNED NOT NULL,
   `fornecedor_id` int UNSIGNED DEFAULT NULL,
-  `tipo` enum('entrada','saida') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tipo` enum('entrada','saida') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `quantidade` int UNSIGNED NOT NULL,
-  `observacao` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `observacao` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `fk_mov_usuario` (`usuario_id`),
@@ -169,10 +169,10 @@ CREATE TABLE IF NOT EXISTS `pedidos` (
   `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `cliente_id` int UNSIGNED DEFAULT NULL,
   `usuario_id` int UNSIGNED NOT NULL,
-  `status` enum('pendente','concluido','cancelado') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pendente',
-  `forma_pagamento` enum('dinheiro','pix','cartao_credito','cartao_debito','boleto') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('pendente','concluido','cancelado') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pendente',
+  `forma_pagamento` enum('dinheiro','pix','cartao_credito','cartao_debito','boleto') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `valor_total` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `observacao` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `observacao` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `atualizado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -191,10 +191,10 @@ DROP TABLE IF EXISTS `produtos`;
 CREATE TABLE IF NOT EXISTS `produtos` (
   `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
   `categoria_id` int UNSIGNED DEFAULT NULL,
-  `nome` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `descricao` text COLLATE utf8mb4_unicode_ci,
-  `marca` varchar(80) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `sku` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nome` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descricao` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `marca` varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sku` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `preco` decimal(10,2) NOT NULL DEFAULT '0.00',
   `garantia_meses` smallint UNSIGNED NOT NULL DEFAULT '0',
   `estoque_atual` int NOT NULL DEFAULT '0',
@@ -229,10 +229,10 @@ INSERT INTO `produtos` (`id`, `categoria_id`, `nome`, `descricao`, `marca`, `sku
 DROP TABLE IF EXISTS `usuarios`;
 CREATE TABLE IF NOT EXISTS `usuarios` (
   `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
-  `nome` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `senha` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `perfil` enum('admin','vendedor') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'vendedor',
+  `nome` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `senha` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `perfil` enum('admin','vendedor') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'vendedor',
   `ativo` tinyint(1) NOT NULL DEFAULT '1',
   `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `atualizado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -245,8 +245,8 @@ CREATE TABLE IF NOT EXISTS `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id`, `nome`, `email`, `senha`, `perfil`, `ativo`, `criado_em`, `atualizado_em`) VALUES
-(1, 'Tony', 'admin@tonybaterias.com', '123456', 'admin', 1, '2026-09-21 10:45:47', '2026-09-21 11:42:55'),
-(2, 'Funcionário', 'funcionario@email.com', '654321', 'vendedor', 1, '2026-09-21 11:53:33', '2026-09-21 11:53:50');
+(1, 'Tony', 'admin@tonybaterias.com', '$2b$10$FejHXJbjYNCjjutO.UHU.OTQ51MpF4qEfbfoSJGkee7BFpVa545q6', 'admin', 1, '2026-09-21 10:45:47', '2026-09-28 18:18:16'),
+(2, 'Funcionário', 'funcionario@email.com', '$2b$10$qdoPJIZM1jT5hKdcBEkxaOr8DTcQikRZLKXSefn.JEaMCZMUqok8K', 'vendedor', 1, '2026-09-21 11:53:33', '2026-09-28 18:18:16');
 
 --
 -- Restrições para tabelas despejadas
