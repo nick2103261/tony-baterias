@@ -18,7 +18,7 @@ class AuthController
 
         $usuario = $this->usuarioModel->buscarPorEmail($email);
 
-        if (!$usuario || $senha !== $usuario['senha']) {
+        if (!$usuario || !password_verify($senha, $usuario['senha'])) {
             $this->redirecionarComErro('E-mail ou senha inválidos.');
         }
 
