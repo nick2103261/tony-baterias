@@ -12,6 +12,10 @@ $itensMenu = [
     'estoque'      => ['label' => 'Estoque',      'icone' => 'estoque',      'link' => 'estoque.php'],
     'pedidos'      => ['label' => 'Pedidos',      'icone' => 'pedidos',      'link' => 'pedidos.php'],
 ];
+
+if (($_SESSION['usuario_perfil'] ?? null) === 'admin') {
+    $itensMenu['usuarios'] = ['label' => 'Usuários', 'icone' => 'pessoa', 'link' => 'usuarios.php'];
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
