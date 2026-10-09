@@ -1,0 +1,158 @@
+.tela-login {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: var(--tony-preto);
+    padding: 20px;
+}
+
+.cartao-login img {
+    width: 70px;
+    height: auto;
+    border: 2px solid var(--tony-amarelo);
+    border-radius: 50%;
+    display: block;
+    margin: 0 auto 20px auto;
+}
+.cartao-login {
+    background-color: var(--tony-branco);
+    border-radius: var(--raio-borda);
+
+    width: 100%;
+    max-width: 400px;
+    padding: 40px 32px;
+
+    position: relative;
+    overflow: hidden;
+    animation: aparecerLogin 0.5s ease;
+
+}
+
+
+.cartao-login::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--tony-amarelo), var(--tony-amarelo-hover));
+}
+
+
+
+.cartao-login__marca {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.cartao-login__marca .tony {
+    color: var(--tony-preto);
+}
+
+.cartao-login__marca .baterias {
+    color: #d4a000; 
+}
+
+.cartao-login__marca h1 {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    margin: 0;
+}
+
+.cartao-login__marca p {
+    font-size: 13px;
+    color: var(--tony-cinza-texto);
+    margin-top: 6px;
+    font-weight: 500;
+}
+
+
+.campo {
+    margin-bottom: 18px;
+}
+
+.campo label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 7px;
+    color: var(--tony-cinza-escuro);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.campo input,
+.campo textarea,
+.campo select {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 12px 14px;
+
+    border: 1px solid #d1d5db;
+    border-radius: var(--raio-sutil);
+
+    background-color: #fafafa;
+    color: var(--tony-preto);
+
+    font-size: 15px;
+    font-family: inherit;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
+}
+
+
+.campo input:focus,
+.campo textarea:focus,
+.campo select:focus {
+    outline: none;
+    border-color: var(--tony-amarelo);
+    background-color: #ffffff;
+}
+
+
+.campo input:disabled {
+    background-color: #f1f1f1;
+    color: var(--tony-cinza-texto);
+    cursor: not-allowed;
+}
+
+
+.cartao-login .btn {
+    width: 100%;
+    margin-top: 12px;
+}
+
+
+@keyframes aparecerLogin {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+@media (max-width: 480px) {
+    .tela-login {
+        padding: 15px;
+    }
+
+    .cartao-login {
+        padding: 32px 24px;
+    }
+
+    .cartao-login__marca h1 {
+        font-size: 23px;
+    }
+}
