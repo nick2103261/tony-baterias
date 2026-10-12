@@ -14,7 +14,7 @@ switch ($acao) {
         $controller = new UsuarioController();
         $id = isset($_POST['id']) && $_POST['id'] !== '' ? (int) $_POST['id'] : null;
 
-        $resultado = $controller->salvar($_POST, $id);
+        $resultado = $controller->salvar($_POST, $id, (int) $_SESSION['usuario_id']);
 
         $_SESSION['mensagem'] = [
             'tipo'  => $resultado['sucesso'] ? 'sucesso' : 'erro',

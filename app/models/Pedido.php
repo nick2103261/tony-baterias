@@ -21,9 +21,10 @@ class Pedido
 
     public function buscarPorId(int $id): ?array
     {
-        $sql = 'SELECT p.*, c.nome AS cliente_nome
+        $sql = 'SELECT p.*, c.nome AS cliente_nome, u.nome AS usuario_nome
                 FROM pedidos p
                 LEFT JOIN clientes c ON c.id = p.cliente_id
+                LEFT JOIN usuarios u ON u.id = p.usuario_id
                 WHERE p.id = :id';
 
         $stmt = $this->db->prepare($sql);

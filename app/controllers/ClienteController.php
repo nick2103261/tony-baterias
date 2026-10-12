@@ -41,6 +41,10 @@ class ClienteController
             return ['sucesso' => false, 'mensagem' => 'Preencha apenas CPF ou CNPJ, não os dois.'];
         }
 
+        if ($cpf === '' && $cnpj === '') {
+            return ['sucesso' => false, 'mensagem' => 'Informe o CPF ou o CNPJ do cliente — esse dado é obrigatório para emissão de nota fiscal.'];
+        }
+
         $dados = [
             'nome'     => $nome,
             'cpf'      => $cpf !== '' ? $cpf : null,

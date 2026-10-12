@@ -17,6 +17,7 @@ if (($_SESSION['usuario_perfil'] ?? null) === 'admin') {
     $itensMenu['usuarios'] = ['label' => 'Usuários', 'icone' => 'pessoa', 'link' => 'usuarios.php'];
     $itensMenu['relatorios'] = ['label' => 'Relatórios', 'icone' => 'relatorios', 'link' => 'relatorios.php'];
     $itensMenu['financeiro'] = ['label' => 'Financeiro', 'icone' => 'cifrao', 'link' => 'financeiro.php'];
+    $itensMenu['atividades'] = ['label' => 'Atividades', 'icone' => 'atividades', 'link' => 'atividades.php'];
 }
 ?>
 <!DOCTYPE html>

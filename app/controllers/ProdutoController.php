@@ -63,7 +63,11 @@ class ProdutoController
         ];
 
         if ($id === null) {
-            $this->produtoModel->criar($dados, $estoqueInicial, $usuarioId);
+            $novoId = $this->produtoModel->criar($dados, $estoqueInicial, $usuarioId);
+
+            $logModel = new LogAtividade();
+            $logModel->registrar($usuarioId, 'Cadastrou produto', 'produto', $novoId);
+
             return ['sucesso' => true, 'mensagem' => 'Produto cadastrado com sucesso.'];
         }
 

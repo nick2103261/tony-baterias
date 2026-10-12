@@ -2,14 +2,24 @@
 require_once __DIR__ . '/../../helpers/icones.php'; 
 
 $editando = $cliente !== null;
+
+$mensagem = $_SESSION['mensagem'] ?? null;
+unset($_SESSION['mensagem']);
 ?>
+
+<?php if ($mensagem): ?>
+    <div class="alerta alerta-<?= $mensagem['tipo'] ?>" style="max-width: 680px;">
+        <?= icone($mensagem['tipo'] === 'sucesso' ? 'sucesso' : 'alerta') ?>
+        <?= htmlspecialchars($mensagem['texto']) ?>
+    </div>
+<?php endif; ?>
 
 <div class="cartao" style="max-width: 680px;">
     <div class="cartao__cabecalho">
         <h2><?= $editando ? 'Editar cliente' : 'Novo cliente' ?></h2>
     </div>
 
-    <form method="POST" action="clientes.php?acao=salvar">
+    <form method="POST" action="clientes.php?acao=salvar" id="form-cliente">
         <?php if ($editando): ?>
             <input type="hidden" name="id" value="<?= $cliente['id'] ?>">
         <?php endif; ?>
@@ -37,7 +47,8 @@ $editando = $cliente !== null;
             </div>
         </div>
         <p style="font-size: 12px; color: var(--tony-cinza-texto); margin-top: -10px; margin-bottom: 18px;">
-            Preencha apenas um dos dois — pessoa física usa CPF, pessoa jurídica usa CNPJ.
+            <strong>Obrigatório preencher um dos dois</strong> — pessoa física usa CPF, pessoa jurídica usa CNPJ.
+            Esse dado é exigido para emissão de nota fiscal.
         </p>
 
         <div class="row g-3">
@@ -76,15 +87,28 @@ $editando = $cliente !== null;
 (function () {
     const cpf = document.getElementById('cpf');
     const cnpj = document.getElementById('cnpj');
+    const form = document.getElementById('form-cliente');
 
     function alternar() {
         cpf.disabled = cnpj.value.trim() !== '';
         cnpj.disabled = cpf.value.trim() !== '';
     }
 
-    cpf.addEventListener('input', alternar);
-    cnpj.addEventListener('input', alternar);
+    function validarObrigatorio() {
+        const mensagem = (cpf.value.trim() === '' && cnpj.value.trim() === '')
+            ? 'Informe o CPF ou o CNPJ do cliente.'
+            : '';
+
+        cpf.setCustomValidity(mensagem);
+    }
+
+    cpf.addEventListener('input', () => { alternar(); validarObrigatorio(); });
+    cnpj.addEventListener('input', () => { alternar(); validarObrigatorio(); });
+
+    form.addEventListener('submit', validarObrigatorio);
+
     alternar();
+    validarObrigatorio();
 })();
 </script>
 

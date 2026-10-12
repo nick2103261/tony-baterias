@@ -101,6 +101,15 @@ function icone(string $nome, int $tamanho = 18): string
             <path d="M15 3v3h3"/>
             <path d="M9 12h6M9 15.5h6M9 9h3"/>
         ',
+        'atividades' => '
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 7.5V12l3.5 2"/>
+        ',
+        'imprimir' => '
+            <path d="M6 9V3h12v6"/>
+            <rect x="4" y="9" width="16" height="8" rx="1"/>
+            <path d="M6 14h12v7H6z"/>
+        ',
         'filtro' => '
             <path d="M4 5h16l-6 8v6l-4-2v-4z"/>
         ',

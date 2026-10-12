@@ -20,7 +20,7 @@ class UsuarioController
         return $this->usuarioModel->buscarPorId($id);
     }
 
-    public function salvar(array $post, ?int $id): array
+    public function salvar(array $post, ?int $id, int $usuarioId): array
     {
         $nome = trim($post['nome'] ?? '');
         $email = trim($post['email'] ?? '');
@@ -36,7 +36,7 @@ class UsuarioController
             return ['sucesso' => false, 'mensagem' => 'O email do usuário é obrigatório.'];
 
         }
-        if (!in_array($perfil, ['admin', 'usuario'])) {
+        if (!in_array($perfil, ['admin', 'vendedor'])) {
             return ['sucesso' => false, 'mensagem' => 'Selecione um perfil válido.'];
 
         }
@@ -55,7 +55,11 @@ class UsuarioController
                     'perfil' => $perfil,
                 ];
 
-                $this->usuarioModel->criar($dados);
+                $novoId = $this->usuarioModel->criar($dados);
+
+                $logModel = new LogAtividade();
+                $logModel->registrar($usuarioId, 'Cadastrou usuário', 'usuario', $novoId);
+
                 return ['sucesso' => true, 'mensagem' => 'Usuário cadastrado com sucesso.'];
             }
             
@@ -81,4 +85,3 @@ class UsuarioController
     }
         
 }
-

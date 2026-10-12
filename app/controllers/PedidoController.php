@@ -105,6 +105,11 @@ class PedidoController
 
         $this->pedidoModel->atualizarStatus($id, $statusAtual, $novoStatus, $usuarioId);
 
+        if ($statusAtual === 'pendente' && $novoStatus === 'concluido') {
+            $logModel = new LogAtividade();
+            $logModel->registrar($usuarioId, 'Concluiu pedido', 'pedido', $id);
+        }
+
         $mensagens = [
             'concluido' => 'Pedido concluído — estoque baixado.',
             'cancelado' => 'Pedido cancelado.',

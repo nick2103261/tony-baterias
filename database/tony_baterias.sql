@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Tempo de geração: 28/09/2026 às 21:19
+-- Tempo de geração: 10/10/2026 às 18:09
 -- Versão do servidor: 8.4.7
 -- Versão do PHP: 8.3.28
 
@@ -21,7 +21,7 @@ SET time_zone = "+00:00";
 -- Banco de dados: `tony_baterias`
 --
 
-Create Database tony_baterias;
+CREATE DATABASE IF NOT EXISTS tony_baterias;
 USE tony_baterias;
 -- --------------------------------------------------------
 
@@ -124,6 +124,25 @@ CREATE TABLE IF NOT EXISTS `itens_pedido` (
   PRIMARY KEY (`id`),
   KEY `fk_itens_produto` (`produto_id`),
   KEY `idx_itens_pedido` (`pedido_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `log_atividades`
+--
+
+DROP TABLE IF EXISTS `log_atividades`;
+CREATE TABLE IF NOT EXISTS `log_atividades` (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `usuario_id` int UNSIGNED NOT NULL,
+  `acao` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tipo_registro` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `registro_id` int UNSIGNED DEFAULT NULL,
+  `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_log_usuario` (`usuario_id`),
+  KEY `idx_log_data` (`criado_em`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -260,6 +279,12 @@ INSERT INTO `usuarios` (`id`, `nome`, `email`, `senha`, `perfil`, `ativo`, `cria
 ALTER TABLE `itens_pedido`
   ADD CONSTRAINT `fk_itens_pedido` FOREIGN KEY (`pedido_id`) REFERENCES `pedidos` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_itens_produto` FOREIGN KEY (`produto_id`) REFERENCES `produtos` (`id`) ON DELETE RESTRICT;
+
+--
+-- Restrições para tabelas `log_atividades`
+--
+ALTER TABLE `log_atividades`
+  ADD CONSTRAINT `fk_log_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE RESTRICT;
 
 --
 -- Restrições para tabelas `movimentacoes_estoque`
