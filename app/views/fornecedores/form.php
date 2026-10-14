@@ -2,7 +2,17 @@
 require_once __DIR__ . '/../../helpers/icones.php'; 
 
 $editando = $fornecedor !== null;
+
+$mensagem = $_SESSION['mensagem'] ?? null;
+unset($_SESSION['mensagem']);
 ?>
+
+<?php if ($mensagem): ?>
+    <div class="alerta alerta-<?= $mensagem['tipo'] ?>" style="max-width: 640px;">
+        <?= icone($mensagem['tipo'] === 'sucesso' ? 'sucesso' : 'alerta') ?>
+        <?= htmlspecialchars($mensagem['texto']) ?>
+    </div>
+<?php endif; ?>
 
 <div class="cartao" style="max-width: 640px;">
     <div class="cartao__cabecalho">

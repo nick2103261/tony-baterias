@@ -30,6 +30,30 @@ switch ($acao) {
         header('Location: ' . BASE_URL . '/clientes.php');
         exit;
 
+    case 'salvar_rapido':
+        // Usado pelo formulário de pedido (modal "Novo cliente"): responde JSON, sem redirecionar
+        header('Content-Type: application/json; charset=utf-8');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['sucesso' => false, 'mensagem' => 'Método inválido.']);
+            exit;
+        }
+
+        $controller = new ClienteController();
+        $resultado = $controller->salvar($_POST, null);
+
+        if ($resultado['sucesso']) {
+            echo json_encode([
+                'sucesso' => true,
+                'id'      => $resultado['id'],
+                'nome'    => trim($_POST['nome'] ?? ''),
+            ]);
+        } else {
+            echo json_encode(['sucesso' => false, 'mensagem' => $resultado['mensagem']]);
+        }
+        exit;
+
     case 'excluir':
         if (isset($_GET['id'])) {
             $controller = new ClienteController();

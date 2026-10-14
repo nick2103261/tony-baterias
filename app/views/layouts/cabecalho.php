@@ -5,7 +5,7 @@ $tituloPagina = $tituloPagina ?? 'Tony Baterias';
 require_once __DIR__ . '/../../helpers/icones.php';
 
 $itensMenu = [
-    'dashboard'    => ['label' => 'Dashboard',    'icone' => 'dashboard',    'link' => 'dashboard.php'],
+    'dashboard'    => ['label' => 'Controle',    'icone' => 'dashboard',    'link' => 'dashboard.php'],
     'produtos'     => ['label' => 'Produtos',     'icone' => 'produtos',     'link' => 'produtos.php'],
     'fornecedores' => ['label' => 'Fornecedores', 'icone' => 'fornecedores', 'link' => 'fornecedores.php'],
     'clientes'     => ['label' => 'Clientes',     'icone' => 'clientes',     'link' => 'clientes.php'],

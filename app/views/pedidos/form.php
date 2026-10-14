@@ -10,7 +10,17 @@ $formasPagamento = [
     'cartao_debito'  => 'Cartão de débito',
     'boleto'         => 'Boleto',
 ];
+
+$mensagem = $_SESSION['mensagem'] ?? null;
+unset($_SESSION['mensagem']);
 ?>
+
+<?php if ($mensagem): ?>
+    <div class="alerta alerta-<?= $mensagem['tipo'] ?>" style="max-width: 760px;">
+        <?= icone($mensagem['tipo'] === 'sucesso' ? 'sucesso' : 'alerta') ?>
+        <?= htmlspecialchars($mensagem['texto']) ?>
+    </div>
+<?php endif; ?>
 
 <div class="cartao" style="max-width: 760px;">
     <div class="cartao__cabecalho">
@@ -26,7 +36,8 @@ $formasPagamento = [
             <div class="col-md-6">
                 <div class="campo">
                     <label for="cliente_id">Cliente</label>
-                    <select id="cliente_id" name="cliente_id">
+                    <div style="display:flex; gap:8px; align-items:stretch;">
+                    <select id="cliente_id" name="cliente_id" style="flex:1;">
                         <option value="">Balcão (sem cliente)</option>
                         <?php foreach ($clientes as $cliente): ?>
                             <option value="<?= $cliente['id'] ?>"
@@ -35,6 +46,11 @@ $formasPagamento = [
                             </option>
                         <?php endforeach; ?>
                     </select>
+                    <button type="button" id="btn-novo-cliente" class="btn" title="Cadastrar novo cliente"
+                            style="width:auto; background:#eee; white-space:nowrap;">
+                        <?= icone('mais', 16) ?> Novo
+                    </button>
+                    </div>
                 </div>
             </div>
             <div class="col-md-6">
@@ -77,6 +93,68 @@ $formasPagamento = [
             <a href="pedidos.php" class="btn" style="width: auto; background: #eee;">Cancelar</a>
         </div>
     </form>
+</div>
+
+<div id="modal-cliente" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1050; overflow-y:auto; padding:24px 12px;">
+    <div class="cartao" style="max-width: 560px; margin: 0 auto;">
+        <div class="cartao__cabecalho">
+            <h2>Novo cliente</h2>
+        </div>
+
+        <div id="modal-cliente-erro" class="alerta alerta-erro" style="display:none;"></div>
+
+        <form id="form-cliente-rapido" novalidate>
+            <div class="campo">
+                <label for="mc-nome">Nome completo / Razão social *</label>
+                <input type="text" id="mc-nome" name="nome">
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="campo">
+                        <label for="mc-cpf">CPF</label>
+                        <input type="text" id="mc-cpf" name="cpf" placeholder="Somente se pessoa física">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="campo">
+                        <label for="mc-cnpj">CNPJ</label>
+                        <input type="text" id="mc-cnpj" name="cnpj" placeholder="Somente se pessoa jurídica">
+                    </div>
+                </div>
+            </div>
+            <p style="font-size: 12px; color: var(--tony-cinza-texto); margin-top: -10px; margin-bottom: 18px;">
+                <strong>Obrigatório preencher um dos dois</strong> (CPF ou CNPJ).
+            </p>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="campo">
+                        <label for="mc-telefone">Telefone</label>
+                        <input type="text" id="mc-telefone" name="telefone">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="campo">
+                        <label for="mc-email">E-mail</label>
+                        <input type="email" id="mc-email" name="email">
+                    </div>
+                </div>
+            </div>
+
+            <div class="campo">
+                <label for="mc-endereco">Endereço</label>
+                <input type="text" id="mc-endereco" name="endereco">
+            </div>
+
+            <div class="d-flex gap-3 mt-2">
+                <button type="submit" class="btn btn-primario" style="width: auto;" id="btn-salvar-cliente-rapido">
+                    <?= icone('salvar', 16) ?> Salvar cliente
+                </button>
+                <button type="button" class="btn" style="width: auto; background: #eee;" id="btn-cancelar-cliente-rapido">Cancelar</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <span id="icone-excluir-template" style="display:none;"><?= icone('excluir', 16) ?></span>
@@ -177,6 +255,73 @@ if (ITENS_INICIAIS.length > 0) {
 } else {
     criarLinha();
 }
+
+// ---------- Cadastro rápido de cliente (modal) ----------
+(function () {
+    const modal      = document.getElementById('modal-cliente');
+    const formRapido = document.getElementById('form-cliente-rapido');
+    const erroBox    = document.getElementById('modal-cliente-erro');
+    const btnSalvar  = document.getElementById('btn-salvar-cliente-rapido');
+    const selectCli  = document.getElementById('cliente_id');
+    const cpf        = document.getElementById('mc-cpf');
+    const cnpj       = document.getElementById('mc-cnpj');
+
+    function alternarDoc() {
+        cpf.disabled  = cnpj.value.trim() !== '';
+        cnpj.disabled = cpf.value.trim() !== '';
+    }
+    cpf.addEventListener('input', alternarDoc);
+    cnpj.addEventListener('input', alternarDoc);
+
+    function abrir() {
+        formRapido.reset();
+        erroBox.style.display = 'none';
+        alternarDoc();
+        modal.style.display = 'block';
+        document.getElementById('mc-nome').focus();
+    }
+
+    function fechar() {
+        modal.style.display = 'none';
+    }
+
+    document.getElementById('btn-novo-cliente').addEventListener('click', abrir);
+    document.getElementById('btn-cancelar-cliente-rapido').addEventListener('click', fechar);
+    modal.addEventListener('click', (e) => { if (e.target === modal) fechar(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.style.display === 'block') fechar(); });
+
+    formRapido.addEventListener('submit', async (evento) => {
+        evento.preventDefault();
+        erroBox.style.display = 'none';
+        btnSalvar.disabled = true;
+
+        // campos desabilitados não entram no FormData, o que é o esperado (só CPF ou CNPJ)
+        const dados = new FormData(formRapido);
+
+        try {
+            const resposta = await fetch('clientes.php?acao=salvar_rapido', { method: 'POST', body: dados });
+            const json = await resposta.json();
+
+            if (!json.sucesso) {
+                erroBox.textContent = json.mensagem || 'Não foi possível salvar o cliente.';
+                erroBox.style.display = 'block';
+                return;
+            }
+
+            const opcao = document.createElement('option');
+            opcao.value = json.id;
+            opcao.textContent = json.nome;
+            selectCli.appendChild(opcao);
+            selectCli.value = json.id;
+            fechar();
+        } catch (e) {
+            erroBox.textContent = 'Erro de comunicação com o servidor. Tente novamente.';
+            erroBox.style.display = 'block';
+        } finally {
+            btnSalvar.disabled = false;
+        }
+    });
+})();
 
 document.getElementById('form-pedido').addEventListener('submit', (evento) => {
     if (document.querySelectorAll('.linha-item-pedido').length === 0) {

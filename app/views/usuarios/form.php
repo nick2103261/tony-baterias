@@ -2,7 +2,17 @@
 require_once __DIR__ . '/../../helpers/icones.php';
 
 $editando = $usuario !== null;
+
+$mensagem = $_SESSION['mensagem'] ?? null;
+unset($_SESSION['mensagem']);
 ?>
+
+<?php if ($mensagem): ?>
+    <div class="alerta alerta-<?= $mensagem['tipo'] ?>" style="max-width: 640px;">
+        <?= icone($mensagem['tipo'] === 'sucesso' ? 'sucesso' : 'alerta') ?>
+        <?= htmlspecialchars($mensagem['texto']) ?>
+    </div>
+<?php endif; ?>
 
 <div class="cartao" style="max-width: 640px;">
     <div class="cartao__cabecalho">
@@ -45,9 +55,11 @@ $editando = $usuario !== null;
                 <input type="password" id="senha" name="senha" required>
             </div>
         <?php else: ?>
-            <p style="font-size: 12px; color: var(--tony-cinza-texto); margin-top: -10px; margin-bottom: 18px;">
-                A senha não é alterada por aqui nesta etapa.
-            </p>
+            <div class="campo">
+                <label for="senha">Nova senha</label>
+                <input type="password" id="senha" name="senha" minlength="6" autocomplete="new-password"
+                       placeholder="Deixe em branco para manter a senha atual">
+            </div>
         <?php endif; ?>
 
         <div class="d-flex gap-3 mt-2">

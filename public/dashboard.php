@@ -6,7 +6,7 @@ $controller = new DashboardController();
 $resumo = $controller->resumo($_SESSION['usuario_perfil']);
 
 $paginaAtiva  = 'dashboard';
-$tituloPagina = 'Dashboard';
+$tituloPagina = 'Controle';
 require __DIR__ . '/../app/views/layouts/cabecalho.php';
 require __DIR__ . '/../app/views/dashboard/index.php';
 require __DIR__ . '/../app/views/layouts/rodape.php';

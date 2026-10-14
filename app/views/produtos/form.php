@@ -2,7 +2,17 @@
 require_once __DIR__ . '/../../helpers/icones.php'; // idempotente: cabecalho.php já deve ter incluído
 
 $editando = $produto !== null;
+
+$mensagem = $_SESSION['mensagem'] ?? null;
+unset($_SESSION['mensagem']);
 ?>
+
+<?php if ($mensagem): ?>
+    <div class="alerta alerta-<?= $mensagem['tipo'] ?>" style="max-width: 720px;">
+        <?= icone($mensagem['tipo'] === 'sucesso' ? 'sucesso' : 'alerta') ?>
+        <?= htmlspecialchars($mensagem['texto']) ?>
+    </div>
+<?php endif; ?>
 
 <div class="cartao" style="max-width: 720px;">
     <div class="cartao__cabecalho">

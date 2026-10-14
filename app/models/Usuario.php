@@ -78,6 +78,15 @@ class Usuario
         ]);
     }
 
+    public function atualizarSenha(int $id, string $senhaHash): void
+    {
+        $stmt = $this->db->prepare('UPDATE usuarios SET senha = :senha WHERE id = :id');
+        $stmt->execute([
+            ':senha' => $senhaHash,
+            ':id' => $id,
+        ]);
+    }
+
     public function inativar(int $id): void
     {
         $stmt = $this->db->prepare('UPDATE usuarios SET ativo = 0 WHERE id = :id ');

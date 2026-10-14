@@ -77,8 +77,8 @@ CREATE TABLE IF NOT EXISTS `clientes` (
 --
 
 INSERT INTO `clientes` (`id`, `nome`, `cpf`, `cnpj`, `telefone`, `email`, `endereco`, `ativo`, `criado_em`, `atualizado_em`) VALUES
-(1, 'João Pereira', '111.222.333-44', NULL, '(11) 98888-1111', 'joao.pereira@example.com', NULL, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
-(2, 'Oficina Mecânica Silva', NULL, NULL, '(11) 97777-2222', 'contato@oficinasilva.example.com', NULL, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47');
+(1, 'João Pereira', '529.982.247-25', NULL, '(11) 98888-1111', 'joao.pereira@example.com', NULL, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
+(2, 'Oficina Mecânica Silva', NULL, '11.222.333/0001-81', '(11) 97777-2222', 'contato@oficinasilva.example.com', NULL, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47');
 
 -- --------------------------------------------------------
 
@@ -268,6 +268,74 @@ CREATE TABLE IF NOT EXISTS `usuarios` (
 INSERT INTO `usuarios` (`id`, `nome`, `email`, `senha`, `perfil`, `ativo`, `criado_em`, `atualizado_em`) VALUES
 (1, 'Tony', 'admin@tonybaterias.com', '$2b$10$FejHXJbjYNCjjutO.UHU.OTQ51MpF4qEfbfoSJGkee7BFpVa545q6', 'admin', 1, '2026-09-21 10:45:47', '2026-09-28 18:18:16'),
 (2, 'Funcionário', 'funcionario@email.com', '$2b$10$qdoPJIZM1jT5hKdcBEkxaOr8DTcQikRZLKXSefn.JEaMCZMUqok8K', 'vendedor', 1, '2026-09-21 11:53:33', '2026-09-28 18:18:16');
+
+--
+-- ============================================================
+-- DADOS DE DEMONSTRAÇÃO (Semana 6)
+-- Pedidos, itens, movimentações de estoque e log de atividades
+-- coerentes entre si, para Relatórios, Financeiro, Dashboard e
+-- Atividades não aparecerem zerados na apresentação.
+-- Para um banco SEM dados de demonstração, apague este bloco
+-- inteiro (até a linha "FIM DOS DADOS DE DEMONSTRAÇÃO").
+-- Resumo: 7 pedidos concluídos (R$ 2.655,00 em outubro/2026,
+-- pagamentos variados) + 1 pedido cancelado + 1 reposição de estoque.
+-- ============================================================
+--
+
+INSERT INTO `pedidos` (`id`, `cliente_id`, `usuario_id`, `status`, `forma_pagamento`, `valor_total`, `observacao`, `criado_em`, `atualizado_em`) VALUES
+(1, 1, 2, 'concluido', 'pix', 320.00, NULL, '2026-10-01 10:15:00', '2026-10-01 10:20:00'),
+(2, NULL, 2, 'concluido', 'dinheiro', 75.00, 'Venda no balcão', '2026-10-02 14:40:00', '2026-10-02 14:45:00'),
+(3, 2, 1, 'concluido', 'boleto', 760.00, NULL, '2026-10-05 09:20:00', '2026-10-05 09:25:00'),
+(4, NULL, 2, 'concluido', 'cartao_debito', 150.00, NULL, '2026-10-06 16:05:00', '2026-10-06 16:10:00'),
+(5, 1, 2, 'cancelado', 'pix', 410.00, 'Cliente desistiu da compra', '2026-10-07 13:25:00', '2026-10-07 13:40:00'),
+(6, 1, 1, 'concluido', 'cartao_credito', 460.00, NULL, '2026-10-08 11:30:00', '2026-10-08 11:35:00'),
+(7, 2, 2, 'concluido', 'pix', 790.00, NULL, '2026-10-09 15:10:00', '2026-10-09 15:15:00'),
+(8, NULL, 1, 'concluido', 'dinheiro', 100.00, 'Venda no balcão', '2026-10-12 10:00:00', '2026-10-12 10:05:00');
+
+INSERT INTO `itens_pedido` (`id`, `pedido_id`, `produto_id`, `quantidade`, `preco_unitario`) VALUES
+(1, 1, 1, 1, 320.00),
+(2, 2, 6, 3, 25.00),
+(3, 3, 2, 2, 380.00),
+(4, 4, 4, 1, 150.00),
+(5, 5, 5, 1, 410.00),
+(6, 6, 5, 1, 410.00),
+(7, 6, 6, 2, 25.00),
+(8, 7, 1, 2, 320.00),
+(9, 7, 3, 1, 150.00),
+(10, 8, 6, 4, 25.00);
+
+INSERT INTO `movimentacoes_estoque` (`id`, `produto_id`, `usuario_id`, `fornecedor_id`, `tipo`, `quantidade`, `observacao`, `criado_em`) VALUES
+(7, 1, 2, NULL, 'saida', 1, 'Venda - Pedido #1', '2026-10-01 10:20:00'),
+(8, 6, 2, NULL, 'saida', 3, 'Venda - Pedido #2', '2026-10-02 14:45:00'),
+(9, 5, 1, 1, 'entrada', 4, 'Reposição de estoque', '2026-10-03 09:00:00'),
+(10, 2, 1, NULL, 'saida', 2, 'Venda - Pedido #3', '2026-10-05 09:25:00'),
+(11, 4, 2, NULL, 'saida', 1, 'Venda - Pedido #4', '2026-10-06 16:10:00'),
+(12, 5, 1, NULL, 'saida', 1, 'Venda - Pedido #6', '2026-10-08 11:35:00'),
+(13, 6, 1, NULL, 'saida', 2, 'Venda - Pedido #6', '2026-10-08 11:35:00'),
+(14, 1, 2, NULL, 'saida', 2, 'Venda - Pedido #7', '2026-10-09 15:15:00'),
+(15, 3, 2, NULL, 'saida', 1, 'Venda - Pedido #7', '2026-10-09 15:15:00'),
+(16, 6, 1, NULL, 'saida', 4, 'Venda - Pedido #8', '2026-10-12 10:05:00');
+
+INSERT INTO `log_atividades` (`id`, `usuario_id`, `acao`, `tipo_registro`, `registro_id`, `criado_em`) VALUES
+(1, 2, 'Concluiu pedido', 'pedido', 1, '2026-10-01 10:20:00'),
+(2, 2, 'Concluiu pedido', 'pedido', 2, '2026-10-02 14:45:00'),
+(3, 1, 'Concluiu pedido', 'pedido', 3, '2026-10-05 09:25:00'),
+(4, 2, 'Concluiu pedido', 'pedido', 4, '2026-10-06 16:10:00'),
+(5, 1, 'Concluiu pedido', 'pedido', 6, '2026-10-08 11:35:00'),
+(6, 2, 'Concluiu pedido', 'pedido', 7, '2026-10-09 15:15:00'),
+(7, 1, 'Concluiu pedido', 'pedido', 8, '2026-10-12 10:05:00');
+
+-- Estoque atual dos produtos depois das movimentações acima
+UPDATE `produtos` SET `estoque_atual` = 5 WHERE `id` = 1;
+UPDATE `produtos` SET `estoque_atual` = 3 WHERE `id` = 2;
+UPDATE `produtos` SET `estoque_atual` = 1 WHERE `id` = 3;
+UPDATE `produtos` SET `estoque_atual` = 3 WHERE `id` = 4;
+UPDATE `produtos` SET `estoque_atual` = 9 WHERE `id` = 5;
+UPDATE `produtos` SET `estoque_atual` = 6 WHERE `id` = 6;
+
+-- ============================================================
+-- FIM DOS DADOS DE DEMONSTRAÇÃO
+-- ============================================================
 
 --
 -- Restrições para tabelas despejadas

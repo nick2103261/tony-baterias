@@ -36,9 +36,18 @@ class UsuarioController
             return ['sucesso' => false, 'mensagem' => 'O email do usuário é obrigatório.'];
 
         }
+
+        if (!emailValido($email)) {
+            return ['sucesso' => false, 'mensagem' => 'E-mail inválido.'];
+        }
+
         if (!in_array($perfil, ['admin', 'vendedor'])) {
             return ['sucesso' => false, 'mensagem' => 'Selecione um perfil válido.'];
 
+        }
+
+        if ($senha !== '' && strlen($senha) < 6) {
+            return ['sucesso' => false, 'mensagem' => 'A senha deve ter pelo menos 6 caracteres.'];
         }
 
         try {
@@ -70,6 +79,17 @@ class UsuarioController
             ];
 
             $this->usuarioModel->atualizar($id, $dados);
+
+            // Senha é opcional na edição: só altera se algo foi digitado
+            if ($senha !== '') {
+                $this->usuarioModel->atualizarSenha($id, password_hash($senha, PASSWORD_DEFAULT));
+
+                $logModel = new LogAtividade();
+                $logModel->registrar($usuarioId, 'Alterou a senha do usuário', 'usuario', $id);
+
+                return ['sucesso' => true, 'mensagem' => 'Usuário atualizado e senha alterada com sucesso.'];
+            }
+
             return ['sucesso' => true, 'mensagem' => 'Usuário atualizado com sucesso.'];
         } catch (PDOException $e) {
             if ($e->getCode() === '23000') {

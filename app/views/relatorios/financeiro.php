@@ -74,7 +74,7 @@ $rotulosFormaPagamento = [
             <tbody>
                 <?php foreach ($financeiro['formas_pagamento'] as $linha): ?>
                     <tr>
-                        <td><?= htmlspecialchars($rotulosFormaPagamento[$linha['forma_pagamento']] ?? $linha['forma_pagamento']) ?></td>
+                        <td><?= htmlspecialchars($rotulosFormaPagamento[$linha['forma_pagamento']] ?? ($linha['forma_pagamento'] ?? 'Não informada')) ?></td>
                         <td>R$ <?= number_format($linha['total'], 2, ',', '.') ?></td>
                         <td><?= (int) $linha['qtd_vendas'] ?></td>
                     </tr>

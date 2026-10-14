@@ -6,7 +6,10 @@ define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
 
-define('APP_ENV', 'development');
+// Modo de erros: 'production' (defesa/uso real) ou 'development' (programando).
+// production: nao mostra erro tecnico na tela, mas registra no log do PHP/Apache.
+// development: mostra os erros na tela para facilitar a correcao.
+define('APP_ENV', 'production');
 
 if (APP_ENV === 'development') {
     ini_set('display_errors', 1);
@@ -14,7 +17,9 @@ if (APP_ENV === 'development') {
     error_reporting(E_ALL);
 } else {
     ini_set('display_errors', 0);
-    error_reporting(0);
+    ini_set('display_startup_errors', 0);
+    ini_set('log_errors', 1);
+    error_reporting(E_ALL);
 }
 
 date_default_timezone_set('America/Sao_Paulo');

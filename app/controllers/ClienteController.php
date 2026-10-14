@@ -41,6 +41,18 @@ class ClienteController
             return ['sucesso' => false, 'mensagem' => 'Preencha apenas CPF ou CNPJ, não os dois.'];
         }
 
+        if ($cpf !== '' && !cpfValido($cpf)) {
+            return ['sucesso' => false, 'mensagem' => 'CPF inválido.'];
+        }
+
+        if ($cnpj !== '' && !cnpjValido($cnpj)) {
+            return ['sucesso' => false, 'mensagem' => 'CNPJ inválido.'];
+        }
+
+        if ($email !== '' && !emailValido($email)) {
+            return ['sucesso' => false, 'mensagem' => 'E-mail inválido.'];
+        }
+
         if ($cpf === '' && $cnpj === '') {
             return ['sucesso' => false, 'mensagem' => 'Informe o CPF ou o CNPJ do cliente — esse dado é obrigatório para emissão de nota fiscal.'];
         }
@@ -56,8 +68,8 @@ class ClienteController
 
         try {
             if ($id === null) {
-                $this->clienteModel->criar($dados);
-                return ['sucesso' => true, 'mensagem' => 'Cliente cadastrado com sucesso.'];
+                $novoId = $this->clienteModel->criar($dados);
+                return ['sucesso' => true, 'mensagem' => 'Cliente cadastrado com sucesso.', 'id' => $novoId];
             }
 
             $this->clienteModel->atualizar($id, $dados);
