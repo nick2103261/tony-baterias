@@ -1,141 +1,89 @@
-<?php
-require_once __DIR__ . '/../../helpers/icones.php'; 
+<?php $editando = $cliente !== null; ?>
 
-$editando = $cliente !== null;
-
-$mensagem = $_SESSION['mensagem'] ?? null;
-unset($_SESSION['mensagem']);
-?>
-
-<?php if ($mensagem): ?>
-    <div class="alerta alerta-<?= $mensagem['tipo'] ?>" style="max-width: 680px;">
-        <?= icone($mensagem['tipo'] === 'sucesso' ? 'sucesso' : 'alerta') ?>
-        <?= htmlspecialchars($mensagem['texto']) ?>
+<div class="pagina-topo">
+    <div>
+        <p class="pagina-topo__eyebrow"><a href="clientes.php">&larr; Clientes</a></p>
+        <h1><?= $editando ? 'Editar cliente' : 'Novo cliente' ?></h1>
     </div>
-<?php endif; ?>
-
-<div class="cartao" style="max-width: 680px;">
-    <div class="cartao__cabecalho">
-        <h2><?= $editando ? 'Editar cliente' : 'Novo cliente' ?></h2>
-    </div>
-
-    <form method="POST" action="clientes.php?acao=salvar" id="form-cliente">
-        <?php if ($editando): ?>
-            <input type="hidden" name="id" value="<?= $cliente['id'] ?>">
-        <?php endif; ?>
-
-        <div class="campo">
-            <label for="nome">Nome completo / Razão social *</label>
-            <input type="text" id="nome" name="nome" required
-                   value="<?= htmlspecialchars($cliente['nome'] ?? '') ?>">
-        </div>
-
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="campo">
-                    <label for="cpf">CPF</label>
-                    <input type="text" id="cpf" name="cpf" placeholder="Somente se pessoa física"
-                           value="<?= htmlspecialchars($cliente['cpf'] ?? '') ?>">
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="campo">
-                    <label for="cnpj">CNPJ</label>
-                    <input type="text" id="cnpj" name="cnpj" placeholder="Somente se pessoa jurídica"
-                           value="<?= htmlspecialchars($cliente['cnpj'] ?? '') ?>">
-                </div>
-            </div>
-        </div>
-        <p style="font-size: 12px; color: var(--tony-cinza-texto); margin-top: -10px; margin-bottom: 18px;">
-            <strong>Obrigatório preencher um dos dois</strong> — pessoa física usa CPF, pessoa jurídica usa CNPJ.
-            Esse dado é exigido para emissão de nota fiscal.
-        </p>
-
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="campo">
-                    <label for="telefone">Telefone</label>
-                    <input type="text" id="telefone" name="telefone"
-                           value="<?= htmlspecialchars($cliente['telefone'] ?? '') ?>">
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="campo">
-                    <label for="email">E-mail</label>
-                    <input type="email" id="email" name="email"
-                           value="<?= htmlspecialchars($cliente['email'] ?? '') ?>">
-                </div>
-            </div>
-        </div>
-
-        <div class="campo">
-            <label for="endereco">Endereço</label>
-            <input type="text" id="endereco" name="endereco"
-                   value="<?= htmlspecialchars($cliente['endereco'] ?? '') ?>">
-        </div>
-
-        <div class="d-flex gap-3 mt-2">
-            <button type="submit" class="btn btn-primario" style="width: auto;">
-                <?= icone('salvar', 16) ?> Salvar
-            </button>
-            <a href="clientes.php" class="btn" style="width: auto; background: #eee;">Cancelar</a>
-        </div>
-    </form>
 </div>
 
-<script>
-(function () {
-    const cpf = document.getElementById('cpf');
-    const cnpj = document.getElementById('cnpj');
-    const form = document.getElementById('form-cliente');
+<?= alertaFlash() ?>
 
-    function alternar() {
-        cpf.disabled = cnpj.value.trim() !== '';
-        cnpj.disabled = cpf.value.trim() !== '';
-    }
+<form method="POST" action="clientes.php?acao=salvar" class="form">
+    <?php if ($editando): ?>
+        <input type="hidden" name="id" value="<?= $cliente['id'] ?>">
+    <?php endif; ?>
 
-    function validarObrigatorio() {
-        const mensagem = (cpf.value.trim() === '' && cnpj.value.trim() === '')
-            ? 'Informe o CPF ou o CNPJ do cliente.'
-            : '';
+    <section class="bloco-form">
+        <div class="campos campos--2">
+            <div class="campo campo--cheio">
+                <label for="nome">Nome completo ou razão social</label>
+                <input type="text" id="nome" name="nome" required
+                       value="<?= htmlspecialchars($cliente['nome'] ?? '') ?>">
+            </div>
+            <div class="campo">
+                <label for="cpf">CPF</label>
+                <input type="text" id="cpf" name="cpf" placeholder="Só pessoa física"
+                       value="<?= htmlspecialchars($cliente['cpf'] ?? '') ?>">
+            </div>
+            <div class="campo">
+                <label for="cnpj">CNPJ</label>
+                <input type="text" id="cnpj" name="cnpj" placeholder="Só pessoa jurídica"
+                       value="<?= htmlspecialchars($cliente['cnpj'] ?? '') ?>">
+            </div>
+            <div class="campo">
+                <label for="telefone">Telefone</label>
+                <input type="text" id="telefone" name="telefone" inputmode="tel"
+                       value="<?= htmlspecialchars($cliente['telefone'] ?? '') ?>">
+            </div>
+            <div class="campo">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" name="email"
+                       value="<?= htmlspecialchars($cliente['email'] ?? '') ?>">
+            </div>
+            <div class="campo campo--cheio">
+                <label for="endereco">Endereço</label>
+                <input type="text" id="endereco" name="endereco"
+                       value="<?= htmlspecialchars($cliente['endereco'] ?? '') ?>">
+            </div>
+        </div>
+    </section>
 
-        cpf.setCustomValidity(mensagem);
-    }
-
-    cpf.addEventListener('input', () => { alternar(); validarObrigatorio(); });
-    cnpj.addEventListener('input', () => { alternar(); validarObrigatorio(); });
-
-    form.addEventListener('submit', validarObrigatorio);
-
-    alternar();
-    validarObrigatorio();
-})();
-</script>
+    <div class="acoes-form">
+        <button type="submit" class="btn btn-primario">Salvar cliente</button>
+        <a href="clientes.php" class="btn btn-secundario">Cancelar</a>
+    </div>
+</form>
 
 <?php if ($editando): ?>
-    <div class="cartao" style="max-width: 680px;">
-        <div class="cartao__cabecalho">
+    <section class="painel" style="margin-top: 36px;">
+        <div class="painel__topo">
             <h2>Histórico de compras</h2>
         </div>
+
         <?php if (empty($historico)): ?>
-            <div class="estado-vazio">
-                <p>Nenhuma compra concluída registrada para este cliente ainda.</p>
-            </div>
+            <div class="estado-vazio">Nenhuma compra concluída para este cliente ainda.</div>
         <?php else: ?>
-            <table class="tabela">
-                <thead>
-                    <tr><th>#</th><th>Data</th><th>Valor</th></tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($historico as $compra): ?>
+            <div class="tabela-wrap">
+                <table class="tabela">
+                    <thead>
                         <tr>
-                            <td>#<?= (int) $compra['id'] ?></td>
-                            <td><?= date('d/m/Y', strtotime($compra['criado_em'])) ?></td>
-                            <td>R$ <?= number_format((float) $compra['valor_total'], 2, ',', '.') ?></td>
+                            <th>Pedido</th>
+                            <th>Data</th>
+                            <th class="num">Valor</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($historico as $compra): ?>
+                            <tr>
+                                <td class="cel-principal">#<?= (int) $compra['id'] ?></td>
+                                <td><?= date('d/m/Y', strtotime($compra['criado_em'])) ?></td>
+                                <td class="num">R$ <?= moeda($compra['valor_total']) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         <?php endif; ?>
-    </div>
+    </section>
 <?php endif; ?>

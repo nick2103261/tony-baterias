@@ -1,332 +1,142 @@
 <?php
-require_once __DIR__ . '/../../helpers/icones.php'; 
-
 $editando = $pedido !== null;
 
-$formasPagamento = [
-    'dinheiro'       => 'Dinheiro',
-    'pix'            => 'Pix',
-    'cartao_credito' => 'Cartão de crédito',
-    'cartao_debito'  => 'Cartão de débito',
-    'boleto'         => 'Boleto',
-];
+// Uma linha de item (usada nos itens já salvos e no modelo para "Adicionar item")
+function linhaItem(array $produtos, int $produtoId = 0, int $quantidade = 1): string
+{
+    $opcoes = '';
+    foreach ($produtos as $p) {
+        $opcoes .= '<option value="' . $p['id'] . '" data-preco="' . $p['preco'] . '"'
+            . ($p['id'] == $produtoId ? ' selected' : '') . '>'
+            . htmlspecialchars($p['nome']) . ' — R$ ' . moeda($p['preco']) . '</option>';
+    }
 
-$mensagem = $_SESSION['mensagem'] ?? null;
-unset($_SESSION['mensagem']);
+    return '<div class="linha-item-pedido">
+        <div class="campo item-produto">
+            <select name="produto_id[]" aria-label="Produto">
+                <option value="">Selecione um produto…</option>' . $opcoes . '
+            </select>
+        </div>
+        <div class="campo item-qtd">
+            <input type="number" name="quantidade[]" min="1" value="' . $quantidade . '" aria-label="Quantidade">
+        </div>
+        <div class="subtotal-celula">R$ <span class="subtotal-item">0,00</span></div>
+        <button type="button" class="btn-remover-item" aria-label="Remover item" title="Remover item">'
+            . icone('excluir', 16) . '</button>
+    </div>';
+}
 ?>
 
-<?php if ($mensagem): ?>
-    <div class="alerta alerta-<?= $mensagem['tipo'] ?>" style="max-width: 760px;">
-        <?= icone($mensagem['tipo'] === 'sucesso' ? 'sucesso' : 'alerta') ?>
-        <?= htmlspecialchars($mensagem['texto']) ?>
+<div class="pagina-topo">
+    <div>
+        <p class="pagina-topo__eyebrow"><a href="pedidos.php">&larr; Pedidos</a></p>
+        <h1><?= $editando ? "Editar pedido #{$pedido['id']}" : 'Novo pedido' ?></h1>
     </div>
-<?php endif; ?>
+</div>
 
-<div class="cartao" style="max-width: 760px;">
-    <div class="cartao__cabecalho">
-        <h2><?= $editando ? "Editar pedido #{$pedido['id']}" : 'Novo pedido' ?></h2>
-    </div>
+<?= alertaFlash() ?>
 
-    <form method="POST" action="pedidos.php?acao=salvar" id="form-pedido">
-        <?php if ($editando): ?>
-            <input type="hidden" name="id" value="<?= $pedido['id'] ?>">
-        <?php endif; ?>
+<form method="POST" action="pedidos.php?acao=salvar" id="form-pedido" class="form">
+    <?php if ($editando): ?>
+        <input type="hidden" name="id" value="<?= $pedido['id'] ?>">
+    <?php endif; ?>
 
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="campo">
-                    <label for="cliente_id">Cliente</label>
-                    <div style="display:flex; gap:8px; align-items:stretch;">
-                    <select id="cliente_id" name="cliente_id" style="flex:1;">
+    <section class="bloco-form">
+        <div class="campos campos--2">
+            <div class="campo">
+                <label for="cliente_id">Cliente</label>
+                <div class="campo-com-acao">
+                    <select id="cliente_id" name="cliente_id">
                         <option value="">Balcão (sem cliente)</option>
                         <?php foreach ($clientes as $cliente): ?>
                             <option value="<?= $cliente['id'] ?>"
-                                <?= (isset($pedido['cliente_id']) && $pedido['cliente_id'] == $cliente['id']) ? 'selected' : '' ?>>
+                                <?= ($pedido['cliente_id'] ?? null) == $cliente['id'] ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($cliente['nome']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <button type="button" id="btn-novo-cliente" class="btn" title="Cadastrar novo cliente"
-                            style="width:auto; background:#eee; white-space:nowrap;">
+                    <a href="clientes.php?acao=form" class="btn btn-secundario" title="Cadastrar novo cliente">
                         <?= icone('mais', 16) ?> Novo
-                    </button>
-                    </div>
+                    </a>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="campo">
-                    <label for="forma_pagamento">Forma de pagamento</label>
-                    <select id="forma_pagamento" name="forma_pagamento">
-                        <option value="">Não definida</option>
-                        <?php foreach ($formasPagamento as $valor => $rotulo): ?>
-                            <option value="<?= $valor ?>" <?= (($pedido['forma_pagamento'] ?? '') === $valor) ? 'selected' : '' ?>>
-                                <?= $rotulo ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <div class="campo">
-            <label for="observacao">Observação</label>
-            <input type="text" id="observacao" name="observacao"
-                   value="<?= htmlspecialchars($pedido['observacao'] ?? '') ?>">
-        </div>
-
-        <div class="campo">
-            <label>Itens do pedido *</label>
-            <div id="lista-itens"></div>
-            <button type="button" class="btn" style="width: auto; background: #eee; margin-top: 4px;" id="btn-add-item">
-                <?= icone('mais', 16) ?> Adicionar item
-            </button>
-        </div>
-
-        <div style="text-align: right; font-size: 18px; font-weight: 700; margin: 16px 0;">
-            Total: R$ <span id="valor-total">0,00</span>
-        </div>
-
-        <div class="d-flex gap-3 mt-2">
-            <button type="submit" class="btn btn-primario" style="width: auto;">
-                <?= icone('salvar', 16) ?> Salvar pedido
-            </button>
-            <a href="pedidos.php" class="btn" style="width: auto; background: #eee;">Cancelar</a>
-        </div>
-    </form>
-</div>
-
-<div id="modal-cliente" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1050; overflow-y:auto; padding:24px 12px;">
-    <div class="cartao" style="max-width: 560px; margin: 0 auto;">
-        <div class="cartao__cabecalho">
-            <h2>Novo cliente</h2>
-        </div>
-
-        <div id="modal-cliente-erro" class="alerta alerta-erro" style="display:none;"></div>
-
-        <form id="form-cliente-rapido" novalidate>
             <div class="campo">
-                <label for="mc-nome">Nome completo / Razão social *</label>
-                <input type="text" id="mc-nome" name="nome">
+                <label for="forma_pagamento">Forma de pagamento</label>
+                <select id="forma_pagamento" name="forma_pagamento">
+                    <option value="">Ainda não definida</option>
+                    <?php foreach (FORMAS_PAGAMENTO as $valor => $rotulo): ?>
+                        <option value="<?= $valor ?>" <?= (($pedido['forma_pagamento'] ?? '') === $valor) ? 'selected' : '' ?>>
+                            <?= $rotulo ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
+            <div class="campo campo--cheio">
+                <label for="observacao">Observação</label>
+                <input type="text" id="observacao" name="observacao"
+                       value="<?= htmlspecialchars($pedido['observacao'] ?? '') ?>">
+            </div>
+        </div>
+    </section>
 
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <div class="campo">
-                        <label for="mc-cpf">CPF</label>
-                        <input type="text" id="mc-cpf" name="cpf" placeholder="Somente se pessoa física">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="campo">
-                        <label for="mc-cnpj">CNPJ</label>
-                        <input type="text" id="mc-cnpj" name="cnpj" placeholder="Somente se pessoa jurídica">
-                    </div>
-                </div>
-            </div>
-            <p style="font-size: 12px; color: var(--tony-cinza-texto); margin-top: -10px; margin-bottom: 18px;">
-                <strong>Obrigatório preencher um dos dois</strong> (CPF ou CNPJ).
-            </p>
+    <section class="bloco-form">
+        <div class="itens-pedido__cab" aria-hidden="true">
+            <span>Produto</span>
+            <span>Qtd.</span>
+            <span>Subtotal</span>
+            <span></span>
+        </div>
 
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <div class="campo">
-                        <label for="mc-telefone">Telefone</label>
-                        <input type="text" id="mc-telefone" name="telefone">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="campo">
-                        <label for="mc-email">E-mail</label>
-                        <input type="email" id="mc-email" name="email">
-                    </div>
-                </div>
-            </div>
+        <div id="lista-itens">
+            <?php foreach ($itens ?: [['produto_id' => 0, 'quantidade' => 1]] as $item): ?>
+                <?= linhaItem($produtos, (int) $item['produto_id'], (int) $item['quantidade']) ?>
+            <?php endforeach; ?>
+        </div>
 
-            <div class="campo">
-                <label for="mc-endereco">Endereço</label>
-                <input type="text" id="mc-endereco" name="endereco">
-            </div>
+        <button type="button" class="btn btn-secundario" id="btn-add-item">
+            <?= icone('mais', 16) ?> Adicionar item
+        </button>
 
-            <div class="d-flex gap-3 mt-2">
-                <button type="submit" class="btn btn-primario" style="width: auto;" id="btn-salvar-cliente-rapido">
-                    <?= icone('salvar', 16) ?> Salvar cliente
-                </button>
-                <button type="button" class="btn" style="width: auto; background: #eee;" id="btn-cancelar-cliente-rapido">Cancelar</button>
-            </div>
-        </form>
+        <div class="total-pedido">
+            <span class="total-pedido__rotulo">Total do pedido</span>
+            <span class="total-pedido__valor"><small>R$</small><span id="valor-total">0,00</span></span>
+        </div>
+    </section>
+
+    <div class="acoes-form">
+        <button type="submit" class="btn btn-primario">Salvar pedido</button>
+        <a href="pedidos.php" class="btn btn-secundario">Cancelar</a>
     </div>
-</div>
+</form>
 
-<span id="icone-excluir-template" style="display:none;"><?= icone('excluir', 16) ?></span>
+<template id="modelo-item"><?= linhaItem($produtos) ?></template>
 
 <script>
-const PRODUTOS = <?= json_encode(array_map(fn($p) => [
-    'id'    => (int) $p['id'],
-    'nome'  => $p['nome'],
-    'preco' => (float) $p['preco'],
-], $produtos)) ?>;
-
-const ITENS_INICIAIS = <?= json_encode(array_map(fn($i) => [
-    'produto_id' => (int) $i['produto_id'],
-    'quantidade' => (int) $i['quantidade'],
-], $itens)) ?>;
-
-const lista = document.getElementById('lista-itens');
-const iconeExcluir = document.getElementById('icone-excluir-template').innerHTML;
-
-function formatarMoeda(valor) {
-    return valor.toFixed(2).replace('.', ',');
-}
-
-function criarLinha(itemInicial) {
-    const linha = document.createElement('div');
-    linha.className = 'linha-item-pedido';
-    linha.style.cssText = 'display:flex; gap:12px; align-items:flex-end; margin-bottom:10px;';
-
-    const opcoesProduto = PRODUTOS.map(p =>
-        `<option value="${p.id}" data-preco="${p.preco}">${p.nome} — R$ ${formatarMoeda(p.preco)}</option>`
-    ).join('');
-
-    linha.innerHTML = `
-        <div class="campo" style="flex:2; margin-bottom:0;">
-            <select name="produto_id[]" class="select-produto" required>
-                <option value="">Selecione um produto...</option>
-                ${opcoesProduto}
-            </select>
-        </div>
-        <div class="campo" style="flex:1; margin-bottom:0;">
-            <input type="number" name="quantidade[]" class="input-quantidade" min="1" value="1" required>
-        </div>
-        <div style="flex:1; padding-bottom:12px; font-weight:600; white-space:nowrap;">
-            R$ <span class="subtotal-item">0,00</span>
-        </div>
-        <button type="button" class="btn-remover-item"
-                style="background:none; border:none; cursor:pointer; padding-bottom:12px; color: var(--tony-erro);">
-            ${iconeExcluir}
-        </button>
-    `;
-
-    const selectProduto   = linha.querySelector('.select-produto');
-    const inputQuantidade = linha.querySelector('.input-quantidade');
-    const subtotalSpan    = linha.querySelector('.subtotal-item');
-    const btnRemover      = linha.querySelector('.btn-remover-item');
-
-    function atualizarSubtotal() {
-        const opcao = selectProduto.selectedOptions[0];
-        const preco = opcao ? parseFloat(opcao.dataset.preco || 0) : 0;
-        const quantidade = parseInt(inputQuantidade.value || 0, 10);
-        subtotalSpan.textContent = formatarMoeda(preco * quantidade);
-        atualizarTotal();
-    }
-
-    selectProduto.addEventListener('change', atualizarSubtotal);
-    inputQuantidade.addEventListener('input', atualizarSubtotal);
-    btnRemover.addEventListener('click', () => {
-        linha.remove();
-        atualizarTotal();
-    });
-
-    if (itemInicial) {
-        selectProduto.value = itemInicial.produto_id;
-        inputQuantidade.value = itemInicial.quantidade;
-    }
-
-    lista.appendChild(linha);
-    atualizarSubtotal();
-}
-
-function atualizarTotal() {
+// Soma o subtotal de cada linha e o total do pedido
+function recalcular() {
     let total = 0;
-    const linhas = document.querySelectorAll('.linha-item-pedido');
-    for (let i = 0; i < linhas.length; i++) {
-        const linha = linhas[i];
-        const opcao = linha.querySelector('.select-produto').selectedOptions[0];
-        const preco = opcao ? parseFloat(opcao.dataset.preco || 0) : 0;
-        const quantidade = parseInt(linha.querySelector('.input-quantidade').value || 0, 10);
-        total += preco * quantidade;
-    }
-    document.getElementById('valor-total').textContent = formatarMoeda(total);
-}
-
-document.getElementById('btn-add-item').addEventListener('click', () => criarLinha());
-
-if (ITENS_INICIAIS.length > 0) {
-    ITENS_INICIAIS.forEach(item => criarLinha(item));
-} else {
-    criarLinha();
-}
-
-// ---------- Cadastro rápido de cliente (modal) ----------
-(function () {
-    const modal      = document.getElementById('modal-cliente');
-    const formRapido = document.getElementById('form-cliente-rapido');
-    const erroBox    = document.getElementById('modal-cliente-erro');
-    const btnSalvar  = document.getElementById('btn-salvar-cliente-rapido');
-    const selectCli  = document.getElementById('cliente_id');
-    const cpf        = document.getElementById('mc-cpf');
-    const cnpj       = document.getElementById('mc-cnpj');
-
-    function alternarDoc() {
-        cpf.disabled  = cnpj.value.trim() !== '';
-        cnpj.disabled = cpf.value.trim() !== '';
-    }
-    cpf.addEventListener('input', alternarDoc);
-    cnpj.addEventListener('input', alternarDoc);
-
-    function abrir() {
-        formRapido.reset();
-        erroBox.style.display = 'none';
-        alternarDoc();
-        modal.style.display = 'block';
-        document.getElementById('mc-nome').focus();
-    }
-
-    function fechar() {
-        modal.style.display = 'none';
-    }
-
-    document.getElementById('btn-novo-cliente').addEventListener('click', abrir);
-    document.getElementById('btn-cancelar-cliente-rapido').addEventListener('click', fechar);
-    modal.addEventListener('click', (e) => { if (e.target === modal) fechar(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.style.display === 'block') fechar(); });
-
-    formRapido.addEventListener('submit', async (evento) => {
-        evento.preventDefault();
-        erroBox.style.display = 'none';
-        btnSalvar.disabled = true;
-
-        // campos desabilitados não entram no FormData, o que é o esperado (só CPF ou CNPJ)
-        const dados = new FormData(formRapido);
-
-        try {
-            const resposta = await fetch('clientes.php?acao=salvar_rapido', { method: 'POST', body: dados });
-            const json = await resposta.json();
-
-            if (!json.sucesso) {
-                erroBox.textContent = json.mensagem || 'Não foi possível salvar o cliente.';
-                erroBox.style.display = 'block';
-                return;
-            }
-
-            const opcao = document.createElement('option');
-            opcao.value = json.id;
-            opcao.textContent = json.nome;
-            selectCli.appendChild(opcao);
-            selectCli.value = json.id;
-            fechar();
-        } catch (e) {
-            erroBox.textContent = 'Erro de comunicação com o servidor. Tente novamente.';
-            erroBox.style.display = 'block';
-        } finally {
-            btnSalvar.disabled = false;
-        }
+    document.querySelectorAll('.linha-item-pedido').forEach(linha => {
+        const preco = linha.querySelector('select').selectedOptions[0].dataset.preco || 0;
+        const subtotal = preco * (linha.querySelector('input').value || 0);
+        linha.querySelector('.subtotal-item').textContent = subtotal.toFixed(2).replace('.', ',');
+        total += subtotal;
     });
-})();
+    document.getElementById('valor-total').textContent = total.toFixed(2).replace('.', ',');
+}
 
-document.getElementById('form-pedido').addEventListener('submit', (evento) => {
-    if (document.querySelectorAll('.linha-item-pedido').length === 0) {
-        evento.preventDefault();
-        alert('Adicione ao menos um item ao pedido.');
+document.getElementById('form-pedido').addEventListener('input', recalcular);
+
+document.getElementById('btn-add-item').addEventListener('click', () => {
+    document.getElementById('lista-itens').append(document.getElementById('modelo-item').content.cloneNode(true));
+    recalcular();
+});
+
+document.getElementById('lista-itens').addEventListener('click', e => {
+    if (e.target.closest('.btn-remover-item')) {
+        e.target.closest('.linha-item-pedido').remove();
+        recalcular();
     }
 });
+
+recalcular();
 </script>

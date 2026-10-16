@@ -26,50 +26,40 @@ class ClienteController
 
     public function salvar(array $post, ?int $id): array
     {
-        $nome     = trim($post['nome'] ?? '');
-        $cpf      = trim($post['cpf'] ?? '');
-        $cnpj     = trim($post['cnpj'] ?? '');
-        $telefone = trim($post['telefone'] ?? '');
-        $email    = trim($post['email'] ?? '');
-        $endereco = trim($post['endereco'] ?? '');
+        // Campos em branco viram NULL no banco
+        $dados = [];
+        foreach (['nome', 'cpf', 'cnpj', 'telefone', 'email', 'endereco'] as $campo) {
+            $dados[$campo] = trim($post[$campo] ?? '') ?: null;
+        }
 
-        if ($nome === '') {
+        if ($dados['nome'] === null) {
             return ['sucesso' => false, 'mensagem' => 'O nome do cliente é obrigatório.'];
         }
 
-        if ($cpf !== '' && $cnpj !== '') {
+        if ($dados['cpf'] !== null && $dados['cnpj'] !== null) {
             return ['sucesso' => false, 'mensagem' => 'Preencha apenas CPF ou CNPJ, não os dois.'];
         }
 
-        if ($cpf !== '' && !cpfValido($cpf)) {
+        if ($dados['cpf'] !== null && !cpfValido($dados['cpf'])) {
             return ['sucesso' => false, 'mensagem' => 'CPF inválido.'];
         }
 
-        if ($cnpj !== '' && !cnpjValido($cnpj)) {
+        if ($dados['cnpj'] !== null && !cnpjValido($dados['cnpj'])) {
             return ['sucesso' => false, 'mensagem' => 'CNPJ inválido.'];
         }
 
-        if ($email !== '' && !emailValido($email)) {
+        if ($dados['email'] !== null && !emailValido($dados['email'])) {
             return ['sucesso' => false, 'mensagem' => 'E-mail inválido.'];
         }
 
-        if ($cpf === '' && $cnpj === '') {
+        if ($dados['cpf'] === null && $dados['cnpj'] === null) {
             return ['sucesso' => false, 'mensagem' => 'Informe o CPF ou o CNPJ do cliente — esse dado é obrigatório para emissão de nota fiscal.'];
         }
 
-        $dados = [
-            'nome'     => $nome,
-            'cpf'      => $cpf !== '' ? $cpf : null,
-            'cnpj'     => $cnpj !== '' ? $cnpj : null,
-            'telefone' => $telefone !== '' ? $telefone : null,
-            'email'    => $email !== '' ? $email : null,
-            'endereco' => $endereco !== '' ? $endereco : null,
-        ];
-
         try {
             if ($id === null) {
-                $novoId = $this->clienteModel->criar($dados);
-                return ['sucesso' => true, 'mensagem' => 'Cliente cadastrado com sucesso.', 'id' => $novoId];
+                $this->clienteModel->criar($dados);
+                return ['sucesso' => true, 'mensagem' => 'Cliente cadastrado com sucesso.'];
             }
 
             $this->clienteModel->atualizar($id, $dados);

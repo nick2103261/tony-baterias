@@ -1,15 +1,12 @@
 <?php
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once __DIR__ . '/../config/config.php';
 
 if (usuarioLogado()) {
-    header('Location: ' . BASE_URL . '/dashboard.php');
-    exit;
+    redirecionar('dashboard.php');
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $controller = new AuthController();
-    $controller->login($_POST['email'] ?? '', $_POST['senha'] ?? '');
-    exit;
+    (new AuthController())->login($_POST['email'] ?? '', $_POST['senha'] ?? '');
 }
 
 require __DIR__ . '/../app/views/auth/login.php';

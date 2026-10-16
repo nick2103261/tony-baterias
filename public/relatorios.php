@@ -1,9 +1,8 @@
 <?php
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once __DIR__ . '/../config/config.php';
 exigirAdmin();
 
-$controller = new RelatorioController();
-$relatorio  = $controller->gerar(
+$relatorio = (new RelatorioController())->gerar(
     trim($_GET['data_inicio'] ?? ''),
     trim($_GET['data_fim'] ?? '')
 );

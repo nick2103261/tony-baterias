@@ -1,55 +1,39 @@
 <?php
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once __DIR__ . '/../config/config.php';
 exigirLogin();
 
+$controller = new FornecedorController();
 $acao = $_GET['acao'] ?? 'listar';
 
 switch ($acao) {
     case 'salvar':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/fornecedores.php');
-            exit;
+            redirecionar('fornecedores.php');
         }
 
-        $controller = new FornecedorController();
-        $id = isset($_POST['id']) && $_POST['id'] !== '' ? (int) $_POST['id'] : null;
-
+        $id = (int) ($_POST['id'] ?? 0) ?: null;
         $resultado = $controller->salvar($_POST, $id);
-
-        $_SESSION['mensagem'] = [
-            'tipo'  => $resultado['sucesso'] ? 'sucesso' : 'erro',
-            'texto' => $resultado['mensagem'],
-        ];
+        $_SESSION['mensagem'] = $resultado;
 
         if (!$resultado['sucesso']) {
-            $destino = $id ? "fornecedores.php?acao=form&id={$id}" : 'fornecedores.php?acao=form';
-            header('Location: ' . BASE_URL . '/' . $destino);
-            exit;
+            redirecionar('fornecedores.php?acao=form' . ($id ? "&id={$id}" : ''));
         }
 
-        header('Location: ' . BASE_URL . '/fornecedores.php');
-        exit;
+        redirecionar('fornecedores.php');
 
     case 'excluir':
-        if (isset($_GET['id'])) {
-            $controller = new FornecedorController();
-            $controller->excluir((int) $_GET['id']);
+        $controller->excluir((int) ($_GET['id'] ?? 0));
+        $_SESSION['mensagem'] = ['sucesso' => true, 'mensagem' => 'Fornecedor excluído com sucesso.'];
 
-            $_SESSION['mensagem'] = ['tipo' => 'sucesso', 'texto' => 'Fornecedor excluído com sucesso.'];
-        }
-
-        header('Location: ' . BASE_URL . '/fornecedores.php');
-        exit;
+        redirecionar('fornecedores.php');
 
     case 'form':
-        $controller = new FornecedorController();
-
         $fornecedor = null;
         if (isset($_GET['id'])) {
             $fornecedor = $controller->buscar((int) $_GET['id']);
+
             if ($fornecedor === null) {
-                header('Location: ' . BASE_URL . '/fornecedores.php');
-                exit;
+                redirecionar('fornecedores.php');
             }
         }
 
@@ -61,7 +45,6 @@ switch ($acao) {
         break;
 
     default:
-        $controller = new FornecedorController();
         $fornecedores = $controller->listar();
 
         $paginaAtiva  = 'fornecedores';

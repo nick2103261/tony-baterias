@@ -4,56 +4,48 @@ class RelatorioController
 {
     public function gerar(string $dataInicio, string $dataFim): array
     {
-        [$dataInicio, $dataFim] = $this->normalizarPeriodo($dataInicio, $dataFim);
+        [$dataInicio, $dataFim, $inicio, $fim] = $this->periodo($dataInicio, $dataFim);
 
-        $inicioCompleto = $dataInicio . ' 00:00:00';
-        $fimCompleto    = $dataFim . ' 23:59:59';
-
-        $relatorioModel = new Relatorio();
+        $relatorio = new Relatorio();
 
         return [
             'data_inicio'   => $dataInicio,
             'data_fim'      => $dataFim,
-            'total_periodo' => $relatorioModel->totalVendidoNoPeriodo($inicioCompleto, $fimCompleto),
-            'produtos'      => $relatorioModel->produtoMaisVendido($inicioCompleto, $fimCompleto),
-            'clientes'      => $relatorioModel->clientesQueMaisCompram($inicioCompleto, $fimCompleto),
+            'total_periodo' => $relatorio->totalVendidoNoPeriodo($inicio, $fim),
+            'produtos'      => $relatorio->produtoMaisVendido($inicio, $fim),
         ];
     }
 
     public function financeiro(string $dataInicio, string $dataFim): array
     {
-        [$dataInicio, $dataFim] = $this->normalizarPeriodo($dataInicio, $dataFim);
+        [$dataInicio, $dataFim, $inicio, $fim] = $this->periodo($dataInicio, $dataFim);
 
-        $inicioCompleto = $dataInicio . ' 00:00:00';
-        $fimCompleto    = $dataFim . ' 23:59:59';
-
-        $relatorioModel = new Relatorio();
+        $relatorio = new Relatorio();
 
         return [
-            'data_inicio'       => $dataInicio,
-            'data_fim'          => $dataFim,
-            'total_periodo'     => $relatorioModel->totalVendidoNoPeriodo($inicioCompleto, $fimCompleto),
-            'ticket_medio'      => $relatorioModel->ticketMedio($inicioCompleto, $fimCompleto),
-            'formas_pagamento'  => $relatorioModel->totalPorFormaPagamento($inicioCompleto, $fimCompleto),
+            'data_inicio'      => $dataInicio,
+            'data_fim'         => $dataFim,
+            'total_periodo'    => $relatorio->totalVendidoNoPeriodo($inicio, $fim),
+            'formas_pagamento' => $relatorio->totalPorFormaPagamento($inicio, $fim),
         ];
     }
 
-    private function normalizarPeriodo(string $dataInicio, string $dataFim): array
+    // Sem filtro (ou data inválida): do dia 1 do mês até hoje. Datas invertidas são trocadas.
+    private function periodo(string $dataInicio, string $dataFim): array
     {
-        // Sem filtro (ou data inválida na URL): mês atual inteiro até hoje
         if (!$this->dataValida($dataInicio)) {
             $dataInicio = date('Y-m-01');
         }
+
         if (!$this->dataValida($dataFim)) {
             $dataFim = date('Y-m-d');
         }
 
-        // Se o admin inverteu as datas, troca de lugar em vez de mostrar tudo vazio
         if ($dataInicio > $dataFim) {
             [$dataInicio, $dataFim] = [$dataFim, $dataInicio];
         }
 
-        return [$dataInicio, $dataFim];
+        return [$dataInicio, $dataFim, $dataInicio . ' 00:00:00', $dataFim . ' 23:59:59'];
     }
 
     private function dataValida(string $data): bool

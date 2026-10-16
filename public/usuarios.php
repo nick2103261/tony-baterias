@@ -1,55 +1,39 @@
 <?php
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once __DIR__ . '/../config/config.php';
 exigirAdmin();
 
+$controller = new UsuarioController();
 $acao = $_GET['acao'] ?? 'listar';
 
 switch ($acao) {
     case 'salvar':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/usuarios.php');
-            exit;
+            redirecionar('usuarios.php');
         }
 
-        $controller = new UsuarioController();
-        $id = isset($_POST['id']) && $_POST['id'] !== '' ? (int) $_POST['id'] : null;
-
-        $resultado = $controller->salvar($_POST, $id, (int) $_SESSION['usuario_id']);
-
-        $_SESSION['mensagem'] = [
-            'tipo'  => $resultado['sucesso'] ? 'sucesso' : 'erro',
-            'texto' => $resultado['mensagem'],
-        ];
+        $id = (int) ($_POST['id'] ?? 0) ?: null;
+        $resultado = $controller->salvar($_POST, $id);
+        $_SESSION['mensagem'] = $resultado;
 
         if (!$resultado['sucesso']) {
-            $destino = $id ? "usuarios.php?acao=form&id={$id}" : 'usuarios.php?acao=form';
-            header('Location: ' . BASE_URL . '/' . $destino);
-            exit;
+            redirecionar('usuarios.php?acao=form' . ($id ? "&id={$id}" : ''));
         }
 
-        header('Location: ' . BASE_URL . '/usuarios.php');
-        exit;
+        redirecionar('usuarios.php');
 
     case 'excluir':
-        if (isset($_GET['id'])) {
-            $controller = new UsuarioController();
-            $controller->excluir((int) $_GET['id']);
+        $controller->excluir((int) ($_GET['id'] ?? 0));
+        $_SESSION['mensagem'] = ['sucesso' => true, 'mensagem' => 'Usuário excluído com sucesso.'];
 
-            $_SESSION['mensagem'] = ['tipo' => 'sucesso', 'texto' => 'Usuário excluído com sucesso.'];
-        }
-
-        header('Location: ' . BASE_URL . '/usuarios.php');
-        exit;
+        redirecionar('usuarios.php');
 
     case 'form':
-        $controller = new UsuarioController();
-
         $usuario = null;
         if (isset($_GET['id'])) {
             $usuario = $controller->buscar((int) $_GET['id']);
+
             if ($usuario === null) {
-                header('Location: ' . BASE_URL . '/usuarios.php');
-                exit;
+                redirecionar('usuarios.php');
             }
         }
 
@@ -61,7 +45,6 @@ switch ($acao) {
         break;
 
     default:
-        $controller = new UsuarioController();
         $usuarios = $controller->listar();
 
         $paginaAtiva  = 'usuarios';

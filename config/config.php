@@ -4,30 +4,57 @@ define('DB_PORT', '3306');
 define('DB_NAME', 'tony_baterias');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_CHARSET', 'utf8mb4');
 
-// Modo de erros: 'production' (defesa/uso real) ou 'development' (programando).
-// production: nao mostra erro tecnico na tela, mas registra no log do PHP/Apache.
-// development: mostra os erros na tela para facilitar a correcao.
+// 'production' esconde erros técnicos da tela; 'development' mostra (para programar)
 define('APP_ENV', 'production');
-
-if (APP_ENV === 'development') {
-    ini_set('display_errors', 1);
-    ini_set('display_startup_errors', 1);
-    error_reporting(E_ALL);
-} else {
-    ini_set('display_errors', 0);
-    ini_set('display_startup_errors', 0);
-    ini_set('log_errors', 1);
-    error_reporting(E_ALL);
-}
+ini_set('display_errors', APP_ENV === 'development' ? 1 : 0);
 
 date_default_timezone_set('America/Sao_Paulo');
 
 define('BASE_URL', 'http://localhost/tony-baterias/public');
-
 define('BASE_PATH', dirname(__DIR__));
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+session_start();
+
+// Carrega models e controllers sozinho quando a classe é usada
+spl_autoload_register(function (string $classe) {
+    foreach (['models', 'controllers'] as $pasta) {
+        $arquivo = BASE_PATH . "/app/$pasta/$classe.php";
+
+        if (file_exists($arquivo)) {
+            require_once $arquivo;
+            return;
+        }
+    }
+});
+
+require_once __DIR__ . '/BancoDados.php';
+require_once BASE_PATH . '/app/helpers/validacoes.php';
+require_once BASE_PATH . '/app/helpers/icones.php';
+
+function redirecionar(string $pagina): void
+{
+    header('Location: ' . BASE_URL . '/' . $pagina);
+    exit;
+}
+
+function usuarioLogado(): bool
+{
+    return isset($_SESSION['usuario_id']);
+}
+
+function exigirLogin(): void
+{
+    if (!usuarioLogado()) {
+        redirecionar('login.php');
+    }
+}
+
+function exigirAdmin(): void
+{
+    exigirLogin();
+
+    if ($_SESSION['usuario_perfil'] !== 'admin') {
+        redirecionar('dashboard.php');
+    }
 }

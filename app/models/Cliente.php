@@ -11,80 +11,53 @@ class Cliente
 
     public function listarTodos(): array
     {
-        $sql = 'SELECT * FROM clientes WHERE ativo = 1 ORDER BY nome';
-
-        return $this->db->query($sql)->fetchAll();
+        return $this->db->query('SELECT * FROM clientes WHERE ativo = 1 ORDER BY nome')->fetchAll();
     }
 
     public function buscarPorId(int $id): ?array
     {
-        $stmt = $this->db->prepare('SELECT * FROM clientes WHERE id = :id AND ativo = 1');
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt = $this->db->prepare('SELECT * FROM clientes WHERE id = ? AND ativo = 1');
+        $stmt->execute([$id]);
 
-        $cliente = $stmt->fetch();
-        return $cliente ?: null;
+        return $stmt->fetch() ?: null;
     }
 
-    public function criar(array $dados): int
+    // $dados: nome, cpf, cnpj, telefone, email, endereco
+    public function criar(array $dados): void
     {
-        $sql = 'INSERT INTO clientes (nome, cpf, cnpj, telefone, email, endereco)
-                VALUES (:nome, :cpf, :cnpj, :telefone, :email, :endereco)';
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            ':nome'     => $dados['nome'],
-            ':cpf'      => $dados['cpf'],
-            ':cnpj'     => $dados['cnpj'],
-            ':telefone' => $dados['telefone'],
-            ':email'    => $dados['email'],
-            ':endereco' => $dados['endereco'],
-        ]);
-
-        return (int) $this->db->lastInsertId();
+        $stmt = $this->db->prepare(
+            'INSERT INTO clientes (nome, cpf, cnpj, telefone, email, endereco)
+             VALUES (:nome, :cpf, :cnpj, :telefone, :email, :endereco)'
+        );
+        $stmt->execute($dados);
     }
 
     public function atualizar(int $id, array $dados): void
     {
-        $sql = 'UPDATE clientes
-                SET nome = :nome,
-                    cpf = :cpf,
-                    cnpj = :cnpj,
-                    telefone = :telefone,
-                    email = :email,
-                    endereco = :endereco
-                WHERE id = :id';
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            ':nome'     => $dados['nome'],
-            ':cpf'      => $dados['cpf'],
-            ':cnpj'     => $dados['cnpj'],
-            ':telefone' => $dados['telefone'],
-            ':email'    => $dados['email'],
-            ':endereco' => $dados['endereco'],
-            ':id'       => $id,
-        ]);
+        $stmt = $this->db->prepare(
+            'UPDATE clientes
+             SET nome = :nome, cpf = :cpf, cnpj = :cnpj, telefone = :telefone, email = :email, endereco = :endereco
+             WHERE id = :id'
+        );
+        $stmt->execute($dados + ['id' => $id]);
     }
 
     public function historicoCompras(int $id): array
     {
-        $sql = "SELECT id, valor_total, status, criado_em
-                FROM pedidos
-                WHERE cliente_id = :cliente_id AND status = 'concluido'
-                ORDER BY criado_em DESC";
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':cliente_id', $id, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt = $this->db->prepare(
+            "SELECT id, valor_total, criado_em
+             FROM pedidos
+             WHERE cliente_id = ? AND status = 'concluido'
+             ORDER BY criado_em DESC"
+        );
+        $stmt->execute([$id]);
 
         return $stmt->fetchAll();
     }
 
     public function inativar(int $id): void
     {
-        $stmt = $this->db->prepare('UPDATE clientes SET ativo = 0 WHERE id = :id');
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt = $this->db->prepare('UPDATE clientes SET ativo = 0 WHERE id = ?');
+        $stmt->execute([$id]);
     }
 }

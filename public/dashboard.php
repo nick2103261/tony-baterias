@@ -1,9 +1,8 @@
 <?php
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once __DIR__ . '/../config/config.php';
 exigirLogin();
 
-$controller = new DashboardController();
-$resumo = $controller->resumo($_SESSION['usuario_perfil']);
+$resumo = (new DashboardController())->resumo($_SESSION['usuario_perfil']);
 
 $paginaAtiva  = 'dashboard';
 $tituloPagina = 'Controle';

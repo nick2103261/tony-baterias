@@ -1,82 +1,43 @@
 <?php
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once __DIR__ . '/../config/config.php';
 exigirLogin();
 
+$controller = new ClienteController();
 $acao = $_GET['acao'] ?? 'listar';
 
 switch ($acao) {
     case 'salvar':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/clientes.php');
-            exit;
+            redirecionar('clientes.php');
         }
 
-        $controller = new ClienteController();
-        $id = isset($_POST['id']) && $_POST['id'] !== '' ? (int) $_POST['id'] : null;
-
+        $id = (int) ($_POST['id'] ?? 0) ?: null;
         $resultado = $controller->salvar($_POST, $id);
-
-        $_SESSION['mensagem'] = [
-            'tipo'  => $resultado['sucesso'] ? 'sucesso' : 'erro',
-            'texto' => $resultado['mensagem'],
-        ];
+        $_SESSION['mensagem'] = $resultado;
 
         if (!$resultado['sucesso']) {
-            $destino = $id ? "clientes.php?acao=form&id={$id}" : 'clientes.php?acao=form';
-            header('Location: ' . BASE_URL . '/' . $destino);
-            exit;
+            redirecionar('clientes.php?acao=form' . ($id ? "&id={$id}" : ''));
         }
 
-        header('Location: ' . BASE_URL . '/clientes.php');
-        exit;
-
-    case 'salvar_rapido':
-        // Usado pelo formulário de pedido (modal "Novo cliente"): responde JSON, sem redirecionar
-        header('Content-Type: application/json; charset=utf-8');
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['sucesso' => false, 'mensagem' => 'Método inválido.']);
-            exit;
-        }
-
-        $controller = new ClienteController();
-        $resultado = $controller->salvar($_POST, null);
-
-        if ($resultado['sucesso']) {
-            echo json_encode([
-                'sucesso' => true,
-                'id'      => $resultado['id'],
-                'nome'    => trim($_POST['nome'] ?? ''),
-            ]);
-        } else {
-            echo json_encode(['sucesso' => false, 'mensagem' => $resultado['mensagem']]);
-        }
-        exit;
+        redirecionar('clientes.php');
 
     case 'excluir':
-        if (isset($_GET['id'])) {
-            $controller = new ClienteController();
-            $controller->excluir((int) $_GET['id']);
+        $controller->excluir((int) ($_GET['id'] ?? 0));
+        $_SESSION['mensagem'] = ['sucesso' => true, 'mensagem' => 'Cliente excluído com sucesso.'];
 
-            $_SESSION['mensagem'] = ['tipo' => 'sucesso', 'texto' => 'Cliente excluído com sucesso.'];
-        }
-
-        header('Location: ' . BASE_URL . '/clientes.php');
-        exit;
+        redirecionar('clientes.php');
 
     case 'form':
-        $controller = new ClienteController();
-
         $cliente = null;
         $historico = [];
         if (isset($_GET['id'])) {
             $cliente = $controller->buscar((int) $_GET['id']);
+
             if ($cliente === null) {
-                header('Location: ' . BASE_URL . '/clientes.php');
-                exit;
+                redirecionar('clientes.php');
             }
-            $historico = $controller->historicoCompras((int) $_GET['id']);
+
+            $historico = $controller->historicoCompras($cliente['id']);
         }
 
         $paginaAtiva  = 'clientes';
@@ -87,7 +48,6 @@ switch ($acao) {
         break;
 
     default:
-        $controller = new ClienteController();
         $clientes = $controller->listar();
 
         $paginaAtiva  = 'clientes';

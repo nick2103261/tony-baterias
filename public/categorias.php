@@ -1,40 +1,23 @@
 <?php
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once __DIR__ . '/../config/config.php';
 exigirLogin();
 
+$controller = new CategoriaController();
 $acao = $_GET['acao'] ?? 'listar';
 
-if ($acao === 'salvar') {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        header('Location: ' . BASE_URL . '/categorias.php');
-        exit;
-    }
+if ($acao === 'salvar' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $_SESSION['mensagem'] = $controller->criar($_POST['nome'] ?? '');
 
-    $controller = new CategoriaController();
-    $resultado = $controller->criar($_POST['nome'] ?? '');
-
-    $_SESSION['mensagem'] = [
-        'tipo'  => $resultado['sucesso'] ? 'sucesso' : 'erro',
-        'texto' => $resultado['mensagem'],
-    ];
-
-    header('Location: ' . BASE_URL . '/categorias.php');
-    exit;
+    redirecionar('categorias.php');
 }
 
 if ($acao === 'excluir') {
-    if (isset($_GET['id'])) {
-        $controller = new CategoriaController();
-        $controller->excluir((int) $_GET['id']);
+    $controller->excluir((int) ($_GET['id'] ?? 0));
+    $_SESSION['mensagem'] = ['sucesso' => true, 'mensagem' => 'Categoria excluída com sucesso.'];
 
-        $_SESSION['mensagem'] = ['tipo' => 'sucesso', 'texto' => 'Categoria excluída com sucesso.'];
-    }
-
-    header('Location: ' . BASE_URL . '/categorias.php');
-    exit;
+    redirecionar('categorias.php');
 }
 
-$controller = new CategoriaController();
 $categorias = $controller->listar();
 
 $paginaAtiva  = 'produtos';

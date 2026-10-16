@@ -1,69 +1,78 @@
 <?php
-$paginaAtiva  = $paginaAtiva ?? '';
-$tituloPagina = $tituloPagina ?? 'Tony Baterias';
-
-require_once __DIR__ . '/../../helpers/icones.php';
-
 $itensMenu = [
-    'dashboard'    => ['label' => 'Controle',    'icone' => 'dashboard',    'link' => 'dashboard.php'],
-    'produtos'     => ['label' => 'Produtos',     'icone' => 'produtos',     'link' => 'produtos.php'],
-    'fornecedores' => ['label' => 'Fornecedores', 'icone' => 'fornecedores', 'link' => 'fornecedores.php'],
-    'clientes'     => ['label' => 'Clientes',     'icone' => 'clientes',     'link' => 'clientes.php'],
-    'estoque'      => ['label' => 'Estoque',      'icone' => 'estoque',      'link' => 'estoque.php'],
-    'pedidos'      => ['label' => 'Pedidos',      'icone' => 'pedidos',      'link' => 'pedidos.php'],
+    'dashboard'    => ['grupo' => 'Dia a dia', 'label' => 'Controle',     'icone' => 'dashboard',    'link' => 'dashboard.php'],
+    'pedidos'      => ['grupo' => 'Dia a dia', 'label' => 'Pedidos',      'icone' => 'pedidos',      'link' => 'pedidos.php'],
+    'clientes'     => ['grupo' => 'Dia a dia', 'label' => 'Clientes',     'icone' => 'clientes',     'link' => 'clientes.php'],
+    'produtos'     => ['grupo' => 'Dia a dia', 'label' => 'Produtos',     'icone' => 'produtos',     'link' => 'produtos.php'],
+    'estoque'      => ['grupo' => 'Dia a dia', 'label' => 'Estoque',      'icone' => 'estoque',      'link' => 'estoque.php'],
+    'fornecedores' => ['grupo' => 'Dia a dia', 'label' => 'Fornecedores', 'icone' => 'fornecedores', 'link' => 'fornecedores.php'],
 ];
 
-if (($_SESSION['usuario_perfil'] ?? null) === 'admin') {
-    $itensMenu['usuarios'] = ['label' => 'Usuários', 'icone' => 'pessoa', 'link' => 'usuarios.php'];
-    $itensMenu['relatorios'] = ['label' => 'Relatórios', 'icone' => 'relatorios', 'link' => 'relatorios.php'];
-    $itensMenu['financeiro'] = ['label' => 'Financeiro', 'icone' => 'cifrao', 'link' => 'financeiro.php'];
-    $itensMenu['atividades'] = ['label' => 'Atividades', 'icone' => 'atividades', 'link' => 'atividades.php'];
+if ($_SESSION['usuario_perfil'] === 'admin') {
+    $itensMenu['relatorios'] = ['grupo' => 'Gestão', 'label' => 'Relatórios', 'icone' => 'relatorios', 'link' => 'relatorios.php'];
+    $itensMenu['financeiro'] = ['grupo' => 'Gestão', 'label' => 'Financeiro', 'icone' => 'cifrao',     'link' => 'financeiro.php'];
+    $itensMenu['usuarios']   = ['grupo' => 'Gestão', 'label' => 'Usuários',   'icone' => 'pessoa',     'link' => 'usuarios.php'];
 }
+
+$nomeUsuario = $_SESSION['usuario_nome'];
+$grupoAtual  = '';
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($tituloPagina) ?> - Tony Baterias</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title><?= htmlspecialchars($tituloPagina) ?> · Tony Baterias</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/global.css">
     <link rel="stylesheet" href="assets/css/forms.css">
     <link rel="stylesheet" href="assets/css/layout.css">
     <link rel="stylesheet" href="assets/css/tables.css">
 </head>
 <body>
-    <div class="layout">
-        <aside class="menu-lateral">
-            <div class="menu-lateral__marca">
-                <img src="assets/img/logo-redonda.jpg" alt="Tony Baterias">
-                <span>TONY BATERIAS</span>
-            </div>
-            <nav class="menu-lateral__menu">
+    <div class="app">
+        <aside class="lateral">
+            <a href="dashboard.php" class="lateral__marca">
+                <img src="assets/img/logo-redonda.jpg" alt="">
+                <div>
+                    <strong>Tony Baterias</strong>
+                    <small>gestão da loja</small>
+                </div>
+            </a>
+
+            <nav class="lateral__nav">
                 <?php foreach ($itensMenu as $chave => $item): ?>
-                    <a href="<?= $item['link'] ?>"
-                       class="menu-lateral__item <?= $paginaAtiva === $chave ? 'menu-lateral__item--ativo' : '' ?>">
-                        <?= icone($item['icone']) ?>
+                    <?php if ($item['grupo'] !== $grupoAtual): ?>
+                        <?php $grupoAtual = $item['grupo']; ?>
+                        <p class="lateral__grupo"><?= $grupoAtual ?></p>
+                    <?php endif; ?>
+                    <a href="<?= $item['link'] ?>" class="lateral__item <?= $paginaAtiva === $chave ? 'lateral__item--ativo' : '' ?>">
+                        <?= icone($item['icone'], 17) ?>
                         <span><?= $item['label'] ?></span>
                     </a>
                 <?php endforeach; ?>
             </nav>
-            <a href="logout.php" class="menu-lateral__sair">
-                <?= icone('sair') ?> <span>Sair</span>
-            </a>
-        </aside>
 
-        <div class="area-principal">
-
-            <header class="topo">
-                <h1><?= htmlspecialchars($tituloPagina) ?></h1>
-
-                <div class="topo__usuario">
-                    <?= icone('pessoa') ?>
-                    <span><?= htmlspecialchars($_SESSION['usuario_nome']) ?></span>
+            <div class="lateral__usuario">
+                <span class="lateral__avatar"><?= htmlspecialchars(mb_strtoupper(mb_substr($nomeUsuario, 0, 1))) ?></span>
+                <div class="lateral__quem">
+                    <div class="lateral__nome"><?= htmlspecialchars($nomeUsuario) ?></div>
+                    <div class="lateral__perfil"><?= $_SESSION['usuario_perfil'] === 'admin' ? 'Administrador' : 'Vendedor' ?></div>
                 </div>
+                <a href="logout.php" class="lateral__sair" title="Sair" aria-label="Sair">
+                    <?= icone('sair', 18) ?>
+                </a>
+            </div>
+        </aside>
+        <div class="lateral__fundo" id="lateral-fundo"></div>
+
+        <div class="principal">
+            <header class="barra-mobile">
+                <button type="button" class="barra-mobile__menu" id="abrir-menu" aria-label="Abrir menu">
+                    <?= icone('menu', 22) ?>
+                </button>
+                <span class="barra-mobile__marca">Tony Baterias</span>
+                <span class="barra-mobile__pagina"><?= htmlspecialchars($tituloPagina) ?></span>
             </header>
 
             <main class="conteudo">

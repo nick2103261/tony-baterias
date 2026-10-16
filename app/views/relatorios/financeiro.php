@@ -1,85 +1,65 @@
-<?php
-require_once __DIR__ . '/../../helpers/icones.php';
+<?php $totalPeriodo = (float) $financeiro['total_periodo']; ?>
 
-$rotulosFormaPagamento = [
-    'dinheiro'        => 'Dinheiro',
-    'pix'             => 'PIX',
-    'cartao_credito'  => 'Cartão de crédito',
-    'cartao_debito'   => 'Cartão de débito',
-    'boleto'          => 'Boleto',
-];
-?>
-
-<div class="cartao">
-    <form method="GET" action="financeiro.php" class="row g-3" style="align-items: end;">
-        <div class="col-md-4">
-            <div class="campo">
-                <label for="data_inicio">De</label>
-                <input type="date" id="data_inicio" name="data_inicio"
-                       value="<?= htmlspecialchars($financeiro['data_inicio']) ?>">
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="campo">
-                <label for="data_fim">Até</label>
-                <input type="date" id="data_fim" name="data_fim"
-                       value="<?= htmlspecialchars($financeiro['data_fim']) ?>">
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="campo">
-                <button type="submit" class="btn btn-primario" style="width: auto;">
-                    <?= icone('filtro', 16) ?> Filtrar
-                </button>
-            </div>
-        </div>
-    </form>
-</div>
-
-<div class="grade-resumo">
-    <div class="cartao-resumo">
-        <div class="cartao-resumo__icone"><?= icone('cifrao', 18) ?></div>
-        <span class="cartao-resumo__rotulo">Total vendido no período</span>
-        <span class="cartao-resumo__valor">
-            R$ <?= number_format($financeiro['total_periodo'], 2, ',', '.') ?>
-        </span>
-    </div>
-    <div class="cartao-resumo">
-        <div class="cartao-resumo__icone"><?= icone('grafico', 18) ?></div>
-        <span class="cartao-resumo__rotulo">Ticket médio</span>
-        <span class="cartao-resumo__valor">
-            R$ <?= number_format($financeiro['ticket_medio'], 2, ',', '.') ?>
-        </span>
+<div class="pagina-topo">
+    <div>
+        <h1>Financeiro</h1>
     </div>
 </div>
 
-<div class="cartao">
-    <div class="cartao__cabecalho">
+<form method="GET" action="financeiro.php" class="filtro-barra">
+    <div class="campo">
+        <label for="data_inicio">De</label>
+        <input type="date" id="data_inicio" name="data_inicio"
+               value="<?= htmlspecialchars($financeiro['data_inicio']) ?>">
+    </div>
+    <div class="campo">
+        <label for="data_fim">Até</label>
+        <input type="date" id="data_fim" name="data_fim"
+               value="<?= htmlspecialchars($financeiro['data_fim']) ?>">
+    </div>
+    <button type="submit" class="btn btn-escuro">Aplicar período</button>
+</form>
+
+<div class="numeros">
+    <div class="numero">
+        <div class="numero__rotulo">Total vendido no período</div>
+        <div class="numero__valor"><small>R$</small><?= moeda($financeiro['total_periodo']) ?></div>
+    </div>
+</div>
+
+<section class="painel">
+    <div class="painel__topo">
         <h2>Por forma de pagamento</h2>
     </div>
+
     <?php if (empty($financeiro['formas_pagamento'])): ?>
-        <div class="estado-vazio">
-            <?= icone('cifrao', 32) ?>
-            <p>Nenhuma venda concluída nesse período.</p>
-        </div>
+        <div class="estado-vazio">Nenhuma venda concluída nesse período.</div>
     <?php else: ?>
-        <table class="tabela">
-            <thead>
-                <tr>
-                    <th>Forma de pagamento</th>
-                    <th>Total</th>
-                    <th>Vendas</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($financeiro['formas_pagamento'] as $linha): ?>
+        <div class="tabela-wrap">
+            <table class="tabela">
+                <thead>
                     <tr>
-                        <td><?= htmlspecialchars($rotulosFormaPagamento[$linha['forma_pagamento']] ?? ($linha['forma_pagamento'] ?? 'Não informada')) ?></td>
-                        <td>R$ <?= number_format($linha['total'], 2, ',', '.') ?></td>
-                        <td><?= (int) $linha['qtd_vendas'] ?></td>
+                        <th>Forma</th>
+                        <th class="num">Total</th>
+                        <th class="num">Vendas</th>
+                        <th class="num">Participação</th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php foreach ($financeiro['formas_pagamento'] as $linha): ?>
+                        <?php $pct = $totalPeriodo > 0 ? round(((float) $linha['total'] / $totalPeriodo) * 100) : 0; ?>
+                        <tr>
+                            <td class="cel-principal"><?= htmlspecialchars(FORMAS_PAGAMENTO[$linha['forma_pagamento'] ?? ''] ?? 'Não informada') ?></td>
+                            <td class="num">R$ <?= moeda($linha['total']) ?></td>
+                            <td class="num"><?= (int) $linha['qtd_vendas'] ?></td>
+                            <td class="num" style="min-width: 150px;">
+                                <?= (int) $pct ?>%
+                                <div class="barra-fina"><span style="width: <?= (int) $pct ?>%"></span></div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     <?php endif; ?>
-</div>
+</section>

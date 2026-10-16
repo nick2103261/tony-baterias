@@ -11,75 +11,60 @@ class Pedido
 
     public function listarTodos(): array
     {
-        $sql = 'SELECT p.*, c.nome AS cliente_nome
-                FROM pedidos p
-                LEFT JOIN clientes c ON c.id = p.cliente_id
-                ORDER BY p.criado_em DESC';
-
-        return $this->db->query($sql)->fetchAll();
+        return $this->db->query(
+            'SELECT p.*, c.nome AS cliente_nome
+             FROM pedidos p
+             LEFT JOIN clientes c ON c.id = p.cliente_id
+             ORDER BY p.criado_em DESC'
+        )->fetchAll();
     }
 
     public function buscarPorId(int $id): ?array
     {
-        $sql = 'SELECT p.*, c.nome AS cliente_nome, u.nome AS usuario_nome
-                FROM pedidos p
-                LEFT JOIN clientes c ON c.id = p.cliente_id
-                LEFT JOIN usuarios u ON u.id = p.usuario_id
-                WHERE p.id = :id';
+        $stmt = $this->db->prepare(
+            'SELECT p.*, c.nome AS cliente_nome, u.nome AS usuario_nome
+             FROM pedidos p
+             LEFT JOIN clientes c ON c.id = p.cliente_id
+             LEFT JOIN usuarios u ON u.id = p.usuario_id
+             WHERE p.id = ?'
+        );
+        $stmt->execute([$id]);
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
-
-        $pedido = $stmt->fetch();
-        return $pedido ?: null;
+        return $stmt->fetch() ?: null;
     }
 
     public function buscarItens(int $pedidoId): array
     {
-        $sql = 'SELECT i.*, pr.nome AS produto_nome
-                FROM itens_pedido i
-                JOIN produtos pr ON pr.id = i.produto_id
-                WHERE i.pedido_id = :pedido_id';
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':pedido_id', $pedidoId, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt = $this->db->prepare(
+            'SELECT i.*, pr.nome AS produto_nome
+             FROM itens_pedido i
+             JOIN produtos pr ON pr.id = i.produto_id
+             WHERE i.pedido_id = ?'
+        );
+        $stmt->execute([$pedidoId]);
 
         return $stmt->fetchAll();
     }
 
-
-    public function criar(array $dados, array $itens, int $usuarioId): int
+    public function criar(array $dados, array $itens, int $usuarioId): void
     {
         $this->db->beginTransaction();
 
         try {
             $stmt = $this->db->prepare(
-                "INSERT INTO pedidos (cliente_id, usuario_id, status, forma_pagamento, observacao, valor_total)
-                 VALUES (:cliente_id, :usuario_id, 'pendente', :forma_pagamento, :observacao, 0)"
+                "INSERT INTO pedidos (cliente_id, usuario_id, status, forma_pagamento, observacao)
+                 VALUES (?, ?, 'pendente', ?, ?)"
             );
-            $stmt->execute([
-                ':cliente_id'      => $dados['cliente_id'],
-                ':usuario_id'      => $usuarioId,
-                ':forma_pagamento' => $dados['forma_pagamento'],
-                ':observacao'      => $dados['observacao'],
-            ]);
+            $stmt->execute([$dados['cliente_id'], $usuarioId, $dados['forma_pagamento'], $dados['observacao']]);
 
-            $pedidoId = (int) $this->db->lastInsertId();
-
-            $valorTotal = $this->inserirItens($pedidoId, $itens);
-            $this->atualizarValorTotal($pedidoId, $valorTotal);
+            $this->inserirItens((int) $this->db->lastInsertId(), $itens);
 
             $this->db->commit();
         } catch (Throwable $e) {
             $this->db->rollBack();
             throw $e;
         }
-
-        return $pedidoId;
     }
-
 
     public function atualizar(int $id, array $dados, array $itens): void
     {
@@ -88,21 +73,15 @@ class Pedido
         try {
             $stmt = $this->db->prepare(
                 'UPDATE pedidos
-                 SET cliente_id = :cliente_id, forma_pagamento = :forma_pagamento, observacao = :observacao
-                 WHERE id = :id'
+                 SET cliente_id = ?, forma_pagamento = ?, observacao = ?
+                 WHERE id = ?'
             );
-            $stmt->execute([
-                ':cliente_id'      => $dados['cliente_id'],
-                ':forma_pagamento' => $dados['forma_pagamento'],
-                ':observacao'      => $dados['observacao'],
-                ':id'              => $id,
-            ]);
+            $stmt->execute([$dados['cliente_id'], $dados['forma_pagamento'], $dados['observacao'], $id]);
 
-            $stmtDel = $this->db->prepare('DELETE FROM itens_pedido WHERE pedido_id = :id');
-            $stmtDel->execute([':id' => $id]);
+            $stmt = $this->db->prepare('DELETE FROM itens_pedido WHERE pedido_id = ?');
+            $stmt->execute([$id]);
 
-            $valorTotal = $this->inserirItens($id, $itens);
-            $this->atualizarValorTotal($id, $valorTotal);
+            $this->inserirItens($id, $itens);
 
             $this->db->commit();
         } catch (Throwable $e) {
@@ -111,11 +90,11 @@ class Pedido
         }
     }
 
-
+    // Concluir baixa o estoque dos itens; cancelar uma venda concluída devolve
     public function atualizarStatus(int $id, string $statusAtual, string $novoStatus, int $usuarioId): void
     {
-        $stmt = $this->db->prepare('UPDATE pedidos SET status = :status WHERE id = :id');
-        $stmt->execute([':status' => $novoStatus, ':id' => $id]);
+        $stmt = $this->db->prepare('UPDATE pedidos SET status = ? WHERE id = ?');
+        $stmt->execute([$novoStatus, $id]);
 
         if ($statusAtual === 'pendente' && $novoStatus === 'concluido') {
             $this->moverEstoqueDosItens($id, $usuarioId, 'saida', "Venda - Pedido #{$id}");
@@ -126,38 +105,24 @@ class Pedido
         }
     }
 
-    private function inserirItens(int $pedidoId, array $itens): float
+    // O preço de cada item é o preço do produto no momento em que o pedido é salvo
+    private function inserirItens(int $pedidoId, array $itens): void
     {
-        $stmtPreco = $this->db->prepare('SELECT preco FROM produtos WHERE id = :id');
-        $stmtItem  = $this->db->prepare(
+        $stmt = $this->db->prepare(
             'INSERT INTO itens_pedido (pedido_id, produto_id, quantidade, preco_unitario)
-             VALUES (:pedido_id, :produto_id, :quantidade, :preco_unitario)'
+             SELECT ?, id, ?, preco FROM produtos WHERE id = ?'
         );
 
-        $valorTotal = 0.0;
-
         foreach ($itens as $item) {
-            $stmtPreco->execute([':id' => $item['produto_id']]);
-            $produto = $stmtPreco->fetch();
-            $preco = $produto ? (float) $produto['preco'] : 0.0;
-
-            $stmtItem->execute([
-                ':pedido_id'      => $pedidoId,
-                ':produto_id'     => $item['produto_id'],
-                ':quantidade'     => $item['quantidade'],
-                ':preco_unitario' => $preco,
-            ]);
-
-            $valorTotal += $preco * $item['quantidade'];
+            $stmt->execute([$pedidoId, $item['quantidade'], $item['produto_id']]);
         }
 
-        return $valorTotal;
-    }
-
-    private function atualizarValorTotal(int $pedidoId, float $valorTotal): void
-    {
-        $stmt = $this->db->prepare('UPDATE pedidos SET valor_total = :valor_total WHERE id = :id');
-        $stmt->execute([':valor_total' => $valorTotal, ':id' => $pedidoId]);
+        $stmt = $this->db->prepare(
+            'UPDATE pedidos
+             SET valor_total = (SELECT COALESCE(SUM(quantidade * preco_unitario), 0) FROM itens_pedido WHERE pedido_id = ?)
+             WHERE id = ?'
+        );
+        $stmt->execute([$pedidoId, $pedidoId]);
     }
 
     private function moverEstoqueDosItens(int $pedidoId, int $usuarioId, string $tipo, string $observacao): void

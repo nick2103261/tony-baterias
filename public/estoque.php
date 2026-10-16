@@ -1,25 +1,17 @@
 <?php
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once __DIR__ . '/../config/config.php';
 exigirLogin();
 
+$controller = new EstoqueController();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $controller = new EstoqueController();
-    $resultado = $controller->registrarMovimentacao($_POST, (int) $_SESSION['usuario_id']);
+    $_SESSION['mensagem'] = $controller->registrarMovimentacao($_POST, (int) $_SESSION['usuario_id']);
 
-    $_SESSION['mensagem'] = [
-        'tipo'  => $resultado['sucesso'] ? 'sucesso' : 'erro',
-        'texto' => $resultado['mensagem'],
-    ];
-
-    header('Location: ' . BASE_URL . '/estoque.php');
-    exit;
+    redirecionar('estoque.php');
 }
 
-$controller = new EstoqueController();
-$fornecedorController = new FornecedorController();
-
-$produtos = $controller->listarComEstoque();
-$fornecedores = $fornecedorController->listar();
+$produtos      = (new ProdutoController())->listar();
+$fornecedores  = (new FornecedorController())->listar();
 $movimentacoes = $controller->listarMovimentacoesRecentes(20);
 
 $paginaAtiva  = 'estoque';

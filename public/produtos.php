@@ -1,58 +1,41 @@
 <?php
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once __DIR__ . '/../config/config.php';
 exigirLogin();
 
+$controller = new ProdutoController();
 $acao = $_GET['acao'] ?? 'listar';
 
 switch ($acao) {
     case 'salvar':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/produtos.php');
-            exit;
+            redirecionar('produtos.php');
         }
 
-        $controller = new ProdutoController();
-        $id = isset($_POST['id']) && $_POST['id'] !== '' ? (int) $_POST['id'] : null;
-
+        $id = (int) ($_POST['id'] ?? 0) ?: null;
         $resultado = $controller->salvar($_POST, $id, (int) $_SESSION['usuario_id']);
+        $_SESSION['mensagem'] = $resultado;
 
-        $_SESSION['mensagem'] = [
-            'tipo'  => $resultado['sucesso'] ? 'sucesso' : 'erro',
-            'texto' => $resultado['mensagem'],
-        ];
-
-        // Se deu erro de validação, volta para o formulário (mantendo o contexto de edição)
         if (!$resultado['sucesso']) {
-            $destino = $id ? "produtos.php?acao=form&id={$id}" : 'produtos.php?acao=form';
-            header('Location: ' . BASE_URL . '/' . $destino);
-            exit;
+            redirecionar('produtos.php?acao=form' . ($id ? "&id={$id}" : ''));
         }
 
-        header('Location: ' . BASE_URL . '/produtos.php');
-        exit;
+        redirecionar('produtos.php');
 
     case 'excluir':
-        if (isset($_GET['id'])) {
-            $controller = new ProdutoController();
-            $controller->excluir((int) $_GET['id']);
+        $controller->excluir((int) ($_GET['id'] ?? 0));
+        $_SESSION['mensagem'] = ['sucesso' => true, 'mensagem' => 'Produto excluído com sucesso.'];
 
-            $_SESSION['mensagem'] = ['tipo' => 'sucesso', 'texto' => 'Produto excluído com sucesso.'];
-        }
-
-        header('Location: ' . BASE_URL . '/produtos.php');
-        exit;
+        redirecionar('produtos.php');
 
     case 'form':
-        $controller = new ProdutoController();
-        $categoriaModel = new Categoria();
-        $categorias = $categoriaModel->listarTodas();
+        $categorias = (new CategoriaController())->listar();
 
         $produto = null;
         if (isset($_GET['id'])) {
             $produto = $controller->buscar((int) $_GET['id']);
+
             if ($produto === null) {
-                header('Location: ' . BASE_URL . '/produtos.php');
-                exit;
+                redirecionar('produtos.php');
             }
         }
 
@@ -64,7 +47,6 @@ switch ($acao) {
         break;
 
     default:
-        $controller = new ProdutoController();
         $produtos = $controller->listar();
 
         $paginaAtiva  = 'produtos';

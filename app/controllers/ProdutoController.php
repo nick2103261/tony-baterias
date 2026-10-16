@@ -19,17 +19,13 @@ class ProdutoController
         return $this->produtoModel->buscarPorId($id);
     }
 
-
     public function salvar(array $post, ?int $id, int $usuarioId): array
     {
         $nome           = trim($post['nome'] ?? '');
-        $descricao      = trim($post['descricao'] ?? '');
-        $marca          = trim($post['marca'] ?? '');
         $sku            = trim($post['sku'] ?? '');
         $preco          = str_replace(',', '.', $post['preco'] ?? '0');
         $garantiaMeses  = (int) ($post['garantia_meses'] ?? 0);
         $estoqueMinimo  = (int) ($post['estoque_minimo'] ?? 0);
-        $categoriaId    = $post['categoria_id'] !== '' ? (int) $post['categoria_id'] : null;
         $estoqueInicial = (int) ($post['estoque_inicial'] ?? 0);
 
         if ($nome === '') {
@@ -46,28 +42,25 @@ class ProdutoController
 
         if ($sku !== '') {
             $existente = $this->produtoModel->buscarPorSku($sku);
+
             if ($existente !== null && (int) $existente['id'] !== $id) {
                 return ['sucesso' => false, 'mensagem' => 'Já existe um produto com esse SKU.'];
             }
         }
 
         $dados = [
-            'categoria_id'   => $categoriaId,
+            'categoria_id'   => ($post['categoria_id'] ?? '') !== '' ? (int) $post['categoria_id'] : null,
             'nome'           => $nome,
-            'descricao'      => $descricao !== '' ? $descricao : null,
-            'marca'          => $marca !== '' ? $marca : null,
-            'sku'            => $sku !== '' ? $sku : null,
+            'descricao'      => trim($post['descricao'] ?? '') ?: null,
+            'marca'          => trim($post['marca'] ?? '') ?: null,
+            'sku'            => $sku ?: null,
             'preco'          => (float) $preco,
             'garantia_meses' => $garantiaMeses,
             'estoque_minimo' => $estoqueMinimo,
         ];
 
         if ($id === null) {
-            $novoId = $this->produtoModel->criar($dados, $estoqueInicial, $usuarioId);
-
-            $logModel = new LogAtividade();
-            $logModel->registrar($usuarioId, 'Cadastrou produto', 'produto', $novoId);
-
+            $this->produtoModel->criar($dados, $estoqueInicial, $usuarioId);
             return ['sucesso' => true, 'mensagem' => 'Produto cadastrado com sucesso.'];
         }
 

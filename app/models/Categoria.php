@@ -14,19 +14,15 @@ class Categoria
         return $this->db->query('SELECT id, nome FROM categorias ORDER BY nome')->fetchAll();
     }
 
-    public function criar(string $nome): int
+    public function criar(string $nome): void
     {
-        $stmt = $this->db->prepare('INSERT INTO categorias (nome) VALUES (:nome)');
-        $stmt->bindValue(':nome', $nome);
-        $stmt->execute();
-
-        return (int) $this->db->lastInsertId();
+        $stmt = $this->db->prepare('INSERT INTO categorias (nome) VALUES (?)');
+        $stmt->execute([$nome]);
     }
 
     public function excluir(int $id): void
     {
-        $stmt = $this->db->prepare('DELETE FROM categorias WHERE id = :id');
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt = $this->db->prepare('DELETE FROM categorias WHERE id = ?');
+        $stmt->execute([$id]);
     }
 }

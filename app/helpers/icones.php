@@ -32,11 +32,6 @@ function icone(string $nome, int $tamanho = 18): string
             <path d="m16 17 5-5-5-5"/>
             <path d="M21 12H9"/>
         ',
-        'entrar' => '
-            <path d="M15 21h4a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-4"/>
-            <path d="m10 17 5-5-5-5"/>
-            <path d="M15 12H3"/>
-        ',
         'pessoa' => '
             <circle cx="12" cy="8" r="4"/>
             <path d="M4 20a8 8 0 0 1 16 0"/>
@@ -63,9 +58,6 @@ function icone(string $nome, int $tamanho = 18): string
             <path d="M7.2 7 8 19a1.4 1.4 0 0 0 1.4 1.3h5.2A1.4 1.4 0 0 0 16 19l.8-12"/>
             <path d="M10.3 10.5v6M13.7 10.5v6"/>
         ',
-        'salvar' => '
-            <path d="m4.5 12.5 5 5 10-10.5"/>
-        ',
         'cancelar' => '
             <circle cx="12" cy="12" r="9"/>
             <path d="m9 9 6 6M15 9l-6 6"/>
@@ -75,20 +67,9 @@ function icone(string $nome, int $tamanho = 18): string
             <path d="M15 3v3h3"/>
             <path d="M9 11h6M9 14.5h6M9 18h3"/>
         ',
-        'entrega' => '
-            <rect x="2" y="8" width="11" height="8" rx="1"/>
-            <path d="M13 11h4l3 3v2h-7z"/>
-            <circle cx="6.5" cy="18" r="1.7"/>
-            <circle cx="16.5" cy="18" r="1.7"/>
-        ',
         'cifrao' => '
             <circle cx="12" cy="12" r="9"/>
             <path d="M12 6.5v11M9.3 9.3c0-1.3 1.2-2.3 2.7-2.3s2.7.9 2.7 2c0 2.8-5.4 1.5-5.4 4.3 0 1.1 1.2 2 2.7 2s2.7-1 2.7-2.3"/>
-        ',
-        'grafico' => '
-            <rect x="4" y="12" width="4" height="8" rx="1"/>
-            <rect x="10" y="6" width="4" height="14" rx="1"/>
-            <rect x="16" y="15" width="4" height="5" rx="1"/>
         ',
         'fornecedores' => '
             <rect x="2" y="7" width="12" height="9" rx="1"/>
@@ -101,25 +82,60 @@ function icone(string $nome, int $tamanho = 18): string
             <path d="M15 3v3h3"/>
             <path d="M9 12h6M9 15.5h6M9 9h3"/>
         ',
-        'atividades' => '
-            <circle cx="12" cy="12" r="9"/>
-            <path d="M12 7.5V12l3.5 2"/>
-        ',
         'imprimir' => '
             <path d="M6 9V3h12v6"/>
             <rect x="4" y="9" width="16" height="8" rx="1"/>
             <path d="M6 14h12v7H6z"/>
         ',
-        'filtro' => '
-            <path d="M4 5h16l-6 8v6l-4-2v-4z"/>
+        'menu' => '
+            <path d="M4 7h16M4 12h16M4 17h10"/>
         ',
     ];
-
-    $conteudo = $tracos[$nome] ?? $tracos['produtos'];
 
     return sprintf(
         '<svg width="%1$d" height="%1$d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">%2$s</svg>',
         $tamanho,
-        trim($conteudo)
+        trim($tracos[$nome])
     );
+}
+
+// Aviso que as páginas deixam em $_SESSION['mensagem'] (aparece uma vez só)
+function alertaFlash(): string
+{
+    $mensagem = $_SESSION['mensagem'] ?? null;
+    unset($_SESSION['mensagem']);
+
+    if (!$mensagem) {
+        return '';
+    }
+
+    $tipo = $mensagem['sucesso'] ? 'sucesso' : 'erro';
+
+    return '<div class="alerta alerta-' . $tipo . '">'
+        . icone($mensagem['sucesso'] ? 'sucesso' : 'alerta')
+        . '<span>' . htmlspecialchars($mensagem['mensagem']) . '</span></div>';
+}
+
+function moeda($valor): string
+{
+    return number_format((float) $valor, 2, ',', '.');
+}
+
+const FORMAS_PAGAMENTO = [
+    'dinheiro'       => 'Dinheiro',
+    'pix'            => 'Pix',
+    'cartao_credito' => 'Cartão de crédito',
+    'cartao_debito'  => 'Cartão de débito',
+    'boleto'         => 'Boleto',
+];
+
+function badgeStatus(string $status): string
+{
+    $badges = [
+        'pendente'  => ['badge-andamento', 'pendente'],
+        'concluido' => ['badge-ok', 'concluído'],
+        'cancelado' => ['badge-alerta', 'cancelado'],
+    ];
+
+    return '<span class="badge ' . $badges[$status][0] . '">' . $badges[$status][1] . '</span>';
 }

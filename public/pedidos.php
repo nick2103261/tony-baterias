@@ -1,61 +1,37 @@
 <?php
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once __DIR__ . '/../config/config.php';
 exigirLogin();
 
+$controller = new PedidoController();
 $acao = $_GET['acao'] ?? 'listar';
 
 switch ($acao) {
     case 'salvar':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . BASE_URL . '/pedidos.php');
-            exit;
+            redirecionar('pedidos.php');
         }
 
-        $controller = new PedidoController();
-        $id = isset($_POST['id']) && $_POST['id'] !== '' ? (int) $_POST['id'] : null;
-
+        $id = (int) ($_POST['id'] ?? 0) ?: null;
         $resultado = $controller->salvar($_POST, $id, (int) $_SESSION['usuario_id']);
-
-        $_SESSION['mensagem'] = [
-            'tipo'  => $resultado['sucesso'] ? 'sucesso' : 'erro',
-            'texto' => $resultado['mensagem'],
-        ];
+        $_SESSION['mensagem'] = $resultado;
 
         if (!$resultado['sucesso']) {
-            $destino = $id ? "pedidos.php?acao=form&id={$id}" : 'pedidos.php?acao=form';
-            header('Location: ' . BASE_URL . '/' . $destino);
-            exit;
+            redirecionar('pedidos.php?acao=form' . ($id ? "&id={$id}" : ''));
         }
 
-        header('Location: ' . BASE_URL . '/pedidos.php');
-        exit;
+        redirecionar('pedidos.php');
 
     case 'status':
-        $id = (int) ($_GET['id'] ?? 0);
-        $novoStatus = $_GET['status'] ?? '';
+        $_SESSION['mensagem'] = $controller->atualizarStatus((int) ($_GET['id'] ?? 0), $_GET['status'] ?? '', (int) $_SESSION['usuario_id']);
 
-        if ($id > 0 && $novoStatus !== '') {
-            $controller = new PedidoController();
-            $resultado = $controller->atualizarStatus($id, $novoStatus, (int) $_SESSION['usuario_id']);
-
-            $_SESSION['mensagem'] = [
-                'tipo'  => $resultado['sucesso'] ? 'sucesso' : 'erro',
-                'texto' => $resultado['mensagem'],
-            ];
-        }
-
-        header('Location: ' . BASE_URL . '/pedidos.php');
-        exit;
+        redirecionar('pedidos.php');
 
     case 'recibo':
-        $controller = new PedidoController();
-
         $id = (int) ($_GET['id'] ?? 0);
         $pedido = $controller->buscar($id);
 
         if ($pedido === null) {
-            header('Location: ' . BASE_URL . '/pedidos.php');
-            exit;
+            redirecionar('pedidos.php');
         }
 
         $itens = $controller->buscarItens($id);
@@ -68,28 +44,26 @@ switch ($acao) {
         break;
 
     case 'form':
-        $controller = new PedidoController();
-        $clienteController = new ClienteController();
-        $produtoController = new ProdutoController();
-
-        $clientes = $clienteController->listar();
-        $produtos = $produtoController->listar();
-
         $pedido = null;
         $itens = [];
+
         if (isset($_GET['id'])) {
             $pedido = $controller->buscar((int) $_GET['id']);
+
             if ($pedido === null) {
-                header('Location: ' . BASE_URL . '/pedidos.php');
-                exit;
+                redirecionar('pedidos.php');
             }
+
             if ($pedido['status'] !== 'pendente') {
-                $_SESSION['mensagem'] = ['tipo' => 'erro', 'texto' => 'Esse pedido já não está mais pendente e não pode ser editado.'];
-                header('Location: ' . BASE_URL . '/pedidos.php');
-                exit;
+                $_SESSION['mensagem'] = ['sucesso' => false, 'mensagem' => 'Esse pedido já não está mais pendente e não pode ser editado.'];
+                redirecionar('pedidos.php');
             }
-            $itens = $controller->buscarItens((int) $_GET['id']);
+
+            $itens = $controller->buscarItens($pedido['id']);
         }
+
+        $clientes = (new ClienteController())->listar();
+        $produtos = (new ProdutoController())->listar();
 
         $paginaAtiva  = 'pedidos';
         $tituloPagina = $pedido ? 'Editar pedido' : 'Novo pedido';
@@ -99,7 +73,6 @@ switch ($acao) {
         break;
 
     default:
-        $controller = new PedidoController();
         $pedidos = $controller->listar();
 
         $paginaAtiva  = 'pedidos';

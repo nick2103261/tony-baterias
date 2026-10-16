@@ -16,47 +16,28 @@ class Fornecedor
 
     public function buscarPorId(int $id): ?array
     {
-        $stmt = $this->db->prepare('SELECT * FROM fornecedores WHERE id = :id AND ativo = 1');
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt = $this->db->prepare('SELECT * FROM fornecedores WHERE id = ? AND ativo = 1');
+        $stmt->execute([$id]);
 
-        $fornecedor = $stmt->fetch();
-        return $fornecedor ?: null;
+        return $stmt->fetch() ?: null;
     }
 
-    public function criar(array $dados): int
+    // $dados: nome, contato, cnpj
+    public function criar(array $dados): void
     {
-        $sql = 'INSERT INTO fornecedores (nome, contato, cnpj) VALUES (:nome, :contato, :cnpj)';
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            ':nome'    => $dados['nome'],
-            ':contato' => $dados['contato'],
-            ':cnpj'    => $dados['cnpj'],
-        ]);
-
-        return (int) $this->db->lastInsertId();
+        $stmt = $this->db->prepare('INSERT INTO fornecedores (nome, contato, cnpj) VALUES (:nome, :contato, :cnpj)');
+        $stmt->execute($dados);
     }
 
     public function atualizar(int $id, array $dados): void
     {
-        $sql = 'UPDATE fornecedores
-                SET nome = :nome, contato = :contato, cnpj = :cnpj
-                WHERE id = :id';
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            ':nome'    => $dados['nome'],
-            ':contato' => $dados['contato'],
-            ':cnpj'    => $dados['cnpj'],
-            ':id'      => $id,
-        ]);
+        $stmt = $this->db->prepare('UPDATE fornecedores SET nome = :nome, contato = :contato, cnpj = :cnpj WHERE id = :id');
+        $stmt->execute($dados + ['id' => $id]);
     }
 
     public function inativar(int $id): void
     {
-        $stmt = $this->db->prepare('UPDATE fornecedores SET ativo = 0 WHERE id = :id');
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt = $this->db->prepare('UPDATE fornecedores SET ativo = 0 WHERE id = ?');
+        $stmt->execute([$id]);
     }
 }

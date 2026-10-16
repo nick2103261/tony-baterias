@@ -19,22 +19,16 @@ class FornecedorController
         return $this->fornecedorModel->buscarPorId($id);
     }
 
-
     public function salvar(array $post, ?int $id): array
     {
-        $nome    = trim($post['nome'] ?? '');
-        $contato = trim($post['contato'] ?? '');
-        $cnpj    = trim($post['cnpj'] ?? '');
-
-        if ($nome === '') {
-            return ['sucesso' => false, 'mensagem' => 'O nome do fornecedor é obrigatório.'];
+        $dados = [];
+        foreach (['nome', 'contato', 'cnpj'] as $campo) {
+            $dados[$campo] = trim($post[$campo] ?? '') ?: null;
         }
 
-        $dados = [
-            'nome'    => $nome,
-            'contato' => $contato !== '' ? $contato : null,
-            'cnpj'    => $cnpj !== '' ? $cnpj : null,
-        ];
+        if ($dados['nome'] === null) {
+            return ['sucesso' => false, 'mensagem' => 'O nome do fornecedor é obrigatório.'];
+        }
 
         if ($id === null) {
             $this->fornecedorModel->criar($dados);

@@ -1,128 +1,165 @@
 <?php
-require_once __DIR__ . '/../../helpers/icones.php';
-
-$badgesPorStatus = [
-    'pendente'  => ['classe' => 'badge-andamento', 'texto' => 'pendente'],
-    'concluido' => ['classe' => 'badge-ok',        'texto' => 'concluído'],
-    'cancelado' => ['classe' => 'badge-alerta',    'texto' => 'cancelado'],
-];
-$badge = $badgesPorStatus[$pedido['status']];
-
-$formasPagamento = [
-    'dinheiro'       => 'Dinheiro',
-    'pix'            => 'Pix',
-    'cartao_credito' => 'Cartão de crédito',
-    'cartao_debito'  => 'Cartão de débito',
-    'boleto'         => 'Boleto',
-];
-$formaPagamentoLabel = $formasPagamento[$pedido['forma_pagamento']] ?? 'não informada';
 $quantidadeTotal = array_sum(array_column($itens, 'quantidade'));
 ?>
 
 <style>
-    .recibo-cabecalho-impressao { display: none; }
+    .recibo {
+        position: relative;
+        max-width: 600px;
+        padding: 38px 36px 34px;
 
-    .recibo-ficha {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        background-color: var(--superficie);
+        border: 1px solid var(--linha);
+        box-shadow: var(--sombra-2);
+    }
+
+    .recibo::after {
+        content: '';
+        position: absolute;
+        left: -1px;
+        right: -1px;
+        bottom: -9px;
+        height: 9px;
+        background:
+            linear-gradient(-45deg, transparent 6px, var(--superficie) 0) 0 0 / 12px 9px repeat-x,
+            linear-gradient(45deg, transparent 6px, var(--superficie) 0) 0 0 / 12px 9px repeat-x;
+        filter: drop-shadow(0 1px 0 var(--linha));
+    }
+
+    .recibo__marca {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
         gap: 16px;
 
-        padding: 16px 18px;
-        margin-bottom: 20px;
-
-        background-color: var(--tony-cinza-fundo);
-        border-radius: var(--raio-sutil);
+        padding-bottom: 18px;
+        border-bottom: 2px solid var(--tinta);
     }
 
-    .recibo-ficha dt {
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-        color: var(--tony-cinza-texto);
-        margin-bottom: 4px;
+    .recibo__marca strong {
+        font-size: 20px;
     }
 
-    .recibo-ficha dd {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--tony-preto);
+    .recibo__marca span {
+        font-size: 12.5px;
+        color: var(--tinta-3);
+        text-align: right;
     }
 
-    .recibo-totais {
-        margin-top: 16px;
-        padding-top: 16px;
-        border-top: 1px dashed var(--tony-cinza-linha);
-
+    .recibo__numero {
         display: flex;
-        justify-content: flex-end;
-    }
-
-    .recibo-totais__tabela {
-        min-width: 220px;
-    }
-
-    .recibo-totais__linha {
-        display: flex;
+        align-items: center;
         justify-content: space-between;
-        gap: 24px;
-        font-size: 14px;
-        color: var(--tony-cinza-texto);
-        padding: 4px 0;
+        gap: 12px;
+        margin: 22px 0 6px;
     }
 
-    .recibo-totais__linha--final {
-        margin-top: 4px;
-        padding-top: 10px;
-        border-top: 1px solid var(--tony-cinza-linha);
-        font-size: 19px;
+    .recibo__numero h1 {
+        font-size: 30px;
+        font-weight: 500;
+    }
+
+    .recibo__ficha {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 24px;
+        margin: 20px 0 8px;
+    }
+
+    .recibo__ficha div {
+        padding: 11px 0;
+        border-bottom: 1px dashed var(--linha-forte);
+    }
+
+    .recibo__ficha dt {
+        font-size: 12px;
+        color: var(--tinta-3);
+        margin-bottom: 3px;
+    }
+
+    .recibo__ficha dd {
+        font-size: 14.5px;
+        font-weight: 600;
+    }
+
+    .recibo__totais {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+        margin-top: 18px;
+        padding-top: 14px;
+        border-top: 2px solid var(--tinta);
+    }
+
+    .recibo__itens-qtd {
+        font-size: 12px;
+        color: var(--tinta-3);
+    }
+
+    .recibo__total {
+        font-size: 36px;
         font-weight: 700;
-        color: var(--tony-preto);
+        line-height: 1;
+    }
+
+    .recibo__total small {
+        margin-right: 6px;
+        font-size: 0.42em;
+        font-weight: 500;
+        color: var(--tinta-3);
+    }
+
+    .recibo__obs {
+        margin-top: 20px;
+        padding-top: 14px;
+        border-top: 1px dashed var(--linha-forte);
+        font-size: 13.5px;
+        color: var(--tinta-2);
+    }
+
+    .recibo__rodape {
+        margin-top: 24px;
+        font-size: 11px;
+        color: var(--tinta-3);
+        text-align: center;
+    }
+
+    @media (max-width: 520px) {
+        .recibo { padding: 28px 20px 26px; }
+        .recibo__ficha { grid-template-columns: 1fr; }
     }
 
     @media print {
-        .menu-lateral, .topo, .no-imprimir { display: none !important; }
-        .conteudo { padding: 0 !important; }
-        .cartao { box-shadow: none !important; border: 1px solid #ddd !important; max-width: 100% !important; }
-
-        .recibo-cabecalho-impressao {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid #000;
-        }
-
-        .recibo-cabecalho-impressao strong {
-            font-size: 18px;
-        }
-
-        .recibo-cabecalho-impressao span {
-            font-size: 12px;
-            color: #555;
-        }
-
-        .recibo-ficha { background-color: transparent; border: 1px solid #ddd; }
+        .recibo { box-shadow: none; border: 1px solid #bbb; max-width: 100%; }
+        .recibo::after { display: none; }
     }
 </style>
 
-<div class="cartao no-imprimir" style="max-width: 640px;">
-    <a href="pedidos.php" class="cartao__acao-secundaria">&larr; Voltar para pedidos</a>
+<div class="pagina-topo no-imprimir">
+    <div>
+        <p class="pagina-topo__eyebrow"><a href="pedidos.php">&larr; Pedidos</a></p>
+        <h1>Recibo</h1>
+    </div>
+    <div class="pagina-topo__acoes">
+        <button type="button" class="btn btn-primario" onclick="window.print()">
+            <?= icone('imprimir', 16) ?> Imprimir
+        </button>
+    </div>
 </div>
 
-<div class="cartao" style="max-width: 640px;">
-    <div class="recibo-cabecalho-impressao">
-        <strong>TONY BATERIAS</strong>
-        <span>Recibo não fiscal — comprovante de venda</span>
+<article class="recibo">
+    <div class="recibo__marca">
+        <strong>Tony Baterias</strong>
+        <span>Comprovante de venda<br>sem valor fiscal</span>
     </div>
 
-    <div class="cartao__cabecalho">
-        <h2>Recibo — Pedido #<?= (int) $pedido['id'] ?></h2>
-        <span class="badge <?= $badge['classe'] ?>"><?= $badge['texto'] ?></span>
+    <div class="recibo__numero">
+        <h1>Pedido #<?= (int) $pedido['id'] ?></h1>
+        <?= badgeStatus($pedido['status']) ?>
     </div>
 
-    <dl class="recibo-ficha">
+    <dl class="recibo__ficha">
         <div>
             <dt>Data</dt>
             <dd><?= date('d/m/Y H:i', strtotime($pedido['criado_em'])) ?></dd>
@@ -132,8 +169,8 @@ $quantidadeTotal = array_sum(array_column($itens, 'quantidade'));
             <dd><?= htmlspecialchars($pedido['cliente_nome'] ?? 'Balcão') ?></dd>
         </div>
         <div>
-            <dt>Forma de pagamento</dt>
-            <dd><?= htmlspecialchars($formaPagamentoLabel) ?></dd>
+            <dt>Pagamento</dt>
+            <dd><?= htmlspecialchars(FORMAS_PAGAMENTO[$pedido['forma_pagamento'] ?? ''] ?? 'Não informada') ?></dd>
         </div>
         <?php if (!empty($pedido['usuario_nome'])): ?>
             <div>
@@ -143,49 +180,35 @@ $quantidadeTotal = array_sum(array_column($itens, 'quantidade'));
         <?php endif; ?>
     </dl>
 
-    <table class="tabela">
+    <table class="tabela tabela--fixa">
         <thead>
             <tr>
                 <th>Produto</th>
-                <th>Qtd.</th>
-                <th>Preço unit.</th>
-                <th>Subtotal</th>
+                <th class="num">Qtd.</th>
+                <th class="num">Unit.</th>
+                <th class="num">Subtotal</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($itens as $item): ?>
                 <tr>
-                    <td><?= htmlspecialchars($item['produto_nome']) ?></td>
-                    <td><?= (int) $item['quantidade'] ?></td>
-                    <td>R$ <?= number_format((float) $item['preco_unitario'], 2, ',', '.') ?></td>
-                    <td>R$ <?= number_format((float) $item['preco_unitario'] * (int) $item['quantidade'], 2, ',', '.') ?></td>
+                    <td class="cel-principal"><?= htmlspecialchars($item['produto_nome']) ?></td>
+                    <td class="num"><?= (int) $item['quantidade'] ?></td>
+                    <td class="num"><?= moeda($item['preco_unitario']) ?></td>
+                    <td class="num"><?= moeda((float) $item['preco_unitario'] * (int) $item['quantidade']) ?></td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
 
-    <div class="recibo-totais">
-        <div class="recibo-totais__tabela">
-            <div class="recibo-totais__linha">
-                <span>Itens</span>
-                <span><?= (int) $quantidadeTotal ?></span>
-            </div>
-            <div class="recibo-totais__linha recibo-totais__linha--final">
-                <span>Total</span>
-                <span>R$ <?= number_format((float) $pedido['valor_total'], 2, ',', '.') ?></span>
-            </div>
-        </div>
+    <div class="recibo__totais">
+        <span class="recibo__itens-qtd"><?= (int) $quantidadeTotal ?> <?= (int) $quantidadeTotal === 1 ? 'item' : 'itens' ?></span>
+        <span class="recibo__total"><small>R$</small><?= moeda($pedido['valor_total']) ?></span>
     </div>
 
     <?php if (!empty($pedido['observacao'])): ?>
-        <p style="margin-top: 16px; font-size: 13px; color: var(--tony-cinza-texto);">
-            <strong>Observação:</strong> <?= htmlspecialchars($pedido['observacao']) ?>
-        </p>
+        <p class="recibo__obs"><strong>Observação:</strong> <?= htmlspecialchars($pedido['observacao']) ?></p>
     <?php endif; ?>
 
-    <div class="no-imprimir mt-3">
-        <button type="button" class="btn btn-primario" style="width: auto;" onclick="window.print()">
-            <?= icone('imprimir', 16) ?> Imprimir
-        </button>
-    </div>
-</div>
+    <p class="recibo__rodape">Obrigado pela preferência.</p>
+</article>
