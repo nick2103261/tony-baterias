@@ -1,0 +1,271 @@
+
+.tabela-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.tabela {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.tabela th {
+    padding: 10px 14px;
+
+    text-align: left;
+    white-space: nowrap;
+
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--tinta-3);
+
+    border-bottom: 1px solid var(--tinta);
+}
+
+.tabela td {
+    padding: 15px 14px;
+    vertical-align: middle;
+    color: var(--tinta-2);
+    border-bottom: 1px solid var(--linha);
+}
+
+.tabela .cel-principal {
+    font-weight: 600;
+    color: var(--tinta);
+}
+
+.tabela tbody tr {
+}
+
+.tabela tbody tr:hover {
+    background-color: rgba(20, 19, 15, 0.035);
+}
+
+.tabela tbody tr:hover td:first-child {
+    box-shadow: inset 3px 0 0 var(--amarelo);
+}
+
+.tabela .num {
+    text-align: right;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.tabela td.num {
+    color: var(--tinta);
+}
+
+.tabela th.num {
+    font-size: 12.5px;
+}
+
+.tabela .rank {
+    width: 44px;
+    font-size: 12px;
+    color: var(--tinta-3);
+}
+
+.tabela .suave {
+    color: var(--tinta-3);
+}
+
+.acoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 2px;
+}
+
+.acao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    width: 34px;
+    height: 34px;
+
+    border: 1px solid transparent;
+    border-radius: var(--raio);
+
+    color: var(--tinta-3);
+    background: none;
+    cursor: pointer;
+
+}
+
+.acao:hover {
+    background-color: var(--superficie);
+    border-color: var(--linha-forte);
+    color: var(--tinta);
+}
+
+.acao--perigo:hover {
+    background-color: var(--erro-fundo);
+    border-color: var(--erro);
+    color: var(--erro);
+}
+
+.acao--ok:hover {
+    background-color: var(--ok-fundo);
+    border-color: var(--ok);
+    color: var(--ok);
+}
+
+.acao span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.estado-vazio {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+
+    padding: 36px 28px;
+
+    border: 1px dashed var(--linha-forte);
+    border-radius: var(--raio);
+
+    color: var(--tinta-2);
+}
+
+.painel .estado-vazio {
+    margin: 20px 22px 22px;
+}
+
+.estado-vazio p {
+    max-width: 44ch;
+    font-size: 15px;
+}
+
+.estado-vazio strong {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--tinta);
+}
+
+.barra-fina {
+    height: 4px;
+    margin-top: 8px;
+    background-color: var(--papel-fundo);
+    position: relative;
+}
+
+.barra-fina span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background-color: var(--tinta);
+}
+
+.tabela--fixa td,
+.tabela--fixa th {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+@media (max-width: 720px) {
+
+    .tabela:not(.tabela--fixa),
+    .tabela:not(.tabela--fixa) tbody,
+    .tabela:not(.tabela--fixa) tr,
+    .tabela:not(.tabela--fixa) td {
+        display: block;
+        width: 100%;
+    }
+
+    .tabela:not(.tabela--fixa) thead {
+        display: none;
+    }
+
+    .tabela:not(.tabela--fixa) tbody tr {
+        padding: 16px 0;
+        border-bottom: 1px solid var(--linha-forte);
+    }
+
+    .tabela:not(.tabela--fixa) tbody tr:hover {
+        background: none;
+    }
+
+    .tabela:not(.tabela--fixa) tbody tr:hover td:first-child {
+        box-shadow: none;
+    }
+
+    .tabela:not(.tabela--fixa) td {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+
+        padding: 4px 0;
+        border: 0;
+
+        text-align: right;
+    }
+
+    .tabela:not(.tabela--fixa) td::before {
+        content: attr(data-rotulo);
+        flex-shrink: 0;
+
+        font-size: 12.5px;
+        color: var(--tinta-3);
+        text-align: left;
+    }
+
+    .tabela:not(.tabela--fixa) td.cel-principal {
+        justify-content: flex-start;
+        padding-bottom: 8px;
+        text-align: left;
+        font-size: 16px;
+    }
+
+    .tabela:not(.tabela--fixa) td.cel-principal::before,
+    .tabela:not(.tabela--fixa) td.rank::before,
+    .tabela:not(.tabela--fixa) td.cel-acoes::before {
+        display: none;
+    }
+
+    .tabela:not(.tabela--fixa) td.rank {
+        width: auto;
+        padding-bottom: 0;
+    }
+
+    .tabela:not(.tabela--fixa) td.cel-acoes {
+        padding-top: 12px;
+    }
+
+    .tabela:not(.tabela--fixa) .acoes {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* na ficha o botão ganha o texto, porque no toque não existe "title" */
+    .tabela:not(.tabela--fixa) .acao {
+        width: auto;
+        height: 38px;
+        padding: 0 12px;
+        border-color: var(--linha-forte);
+        background-color: var(--superficie);
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .tabela:not(.tabela--fixa) .acao span {
+        position: static;
+        width: auto;
+        height: auto;
+        overflow: visible;
+        clip: auto;
+    }
+
+    .painel .tabela-wrap {
+        padding: 0 16px 8px;
+    }
+}
