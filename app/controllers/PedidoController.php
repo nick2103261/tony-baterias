@@ -14,6 +14,16 @@ class PedidoController
         return $this->pedidoModel->listarTodos();
     }
 
+    public function listarRecentes(int $limite): array
+    {
+        return $this->pedidoModel->listarRecentes($limite);
+    }
+
+    public function contarPendentes(): int
+    {
+        return $this->pedidoModel->contarPendentes();
+    }
+
     public function buscar(int $id): ?array
     {
         return $this->pedidoModel->buscarPorId($id);
@@ -38,33 +48,74 @@ class PedidoController
             }
         }
 
-        $itens = [];
-        foreach ($post['produto_id'] ?? [] as $indice => $produtoId) {
+        // Linhas repetidas do mesmo produto viram uma só, com a quantidade somada
+        $produtosPost    = is_array($post['produto_id'] ?? null) ? $post['produto_id'] : [];
+        $quantidadesPost = is_array($post['quantidade'] ?? null) ? $post['quantidade'] : [];
+        $quantidades     = [];
+
+        foreach ($produtosPost as $indice => $produtoId) {
+            $quantidade = $quantidadesPost[$indice] ?? 0;
+
+            if (!is_scalar($produtoId) || !is_scalar($quantidade)) {
+                continue;
+            }
+
             $produtoId  = (int) $produtoId;
-            $quantidade = (int) ($post['quantidade'][$indice] ?? 0);
+            $quantidade = (int) $quantidade;
 
             if ($produtoId > 0 && $quantidade > 0) {
-                $itens[] = ['produto_id' => $produtoId, 'quantidade' => $quantidade];
+                $quantidades[$produtoId] = ($quantidades[$produtoId] ?? 0) + $quantidade;
             }
         }
 
-        if (empty($itens)) {
+        if (empty($quantidades)) {
             return ['sucesso' => false, 'mensagem' => 'Adicione ao menos um item ao pedido.'];
         }
 
-        $dados = [
-            'cliente_id'      => (int) ($post['cliente_id'] ?? 0) ?: null,
-            'forma_pagamento' => isset(FORMAS_PAGAMENTO[$post['forma_pagamento'] ?? '']) ? $post['forma_pagamento'] : null,
-            'observacao'      => trim($post['observacao'] ?? '') ?: null,
-        ];
+        $produtoController = new ProdutoController();
+        $itens = [];
 
-        if ($id === null) {
-            $this->pedidoModel->criar($dados, $itens, $usuarioId);
-            return ['sucesso' => true, 'mensagem' => 'Pedido criado com sucesso.'];
+        foreach ($quantidades as $produtoId => $quantidade) {
+            if ($quantidade > LIMITE_QUANTIDADE) {
+                return ['sucesso' => false, 'mensagem' => 'A quantidade de um item aceita no máximo ' . number_format(LIMITE_QUANTIDADE, 0, ',', '.') . ' unidades.'];
+            }
+
+            if ($produtoController->buscar($produtoId) === null) {
+                return ['sucesso' => false, 'mensagem' => 'Um dos produtos escolhidos não existe mais. Atualize a página e refaça o pedido.'];
+            }
+
+            $itens[] = ['produto_id' => $produtoId, 'quantidade' => $quantidade];
         }
 
-        $this->pedidoModel->atualizar($id, $dados, $itens);
-        return ['sucesso' => true, 'mensagem' => 'Pedido atualizado com sucesso.'];
+        $clienteId  = (int) campoTexto($post, 'cliente_id') ?: null;
+        $pagamento  = campoTexto($post, 'forma_pagamento');
+        $observacao = campoTexto($post, 'observacao');
+
+        if ($clienteId !== null && (new ClienteController())->buscar($clienteId) === null) {
+            return ['sucesso' => false, 'mensagem' => 'Cliente inválido.'];
+        }
+
+        if (mb_strlen($observacao) > 255) {
+            return ['sucesso' => false, 'mensagem' => 'A observação aceita no máximo 255 caracteres.'];
+        }
+
+        $dados = [
+            'cliente_id'      => $clienteId,
+            'forma_pagamento' => isset(FORMAS_PAGAMENTO[$pagamento]) ? $pagamento : null,
+            'observacao'      => textoOuNulo($observacao),
+        ];
+
+        try {
+            if ($id === null) {
+                $this->pedidoModel->criar($dados, $itens, $usuarioId);
+                return ['sucesso' => true, 'mensagem' => 'Pedido criado com sucesso.'];
+            }
+
+            $this->pedidoModel->atualizar($id, $dados, $itens);
+            return ['sucesso' => true, 'mensagem' => 'Pedido atualizado com sucesso.'];
+        } catch (RegraDeNegocioException $e) {
+            return ['sucesso' => false, 'mensagem' => $e->getMessage()];
+        }
     }
 
     public function atualizarStatus(int $id, string $novoStatus, int $usuarioId): array
@@ -88,18 +139,39 @@ class PedidoController
         }
 
         if ($novoStatus === 'concluido') {
-            $produtoController = new ProdutoController();
+            // Soma por produto antes de comparar com o estoque (o mesmo produto pode aparecer em mais de uma linha)
+            $necessario = [];
 
             foreach ($this->pedidoModel->buscarItens($id) as $item) {
-                $produto = $produtoController->buscar((int) $item['produto_id']);
+                $produtoId = (int) $item['produto_id'];
 
-                if ($produto === null || (int) $produto['estoque_atual'] < (int) $item['quantidade']) {
-                    return ['sucesso' => false, 'mensagem' => "Estoque insuficiente de \"{$item['produto_nome']}\" para concluir este pedido."];
+                $necessario[$produtoId]['nome']       = $item['produto_nome'];
+                $necessario[$produtoId]['quantidade'] = ($necessario[$produtoId]['quantidade'] ?? 0) + (int) $item['quantidade'];
+            }
+
+            $produtoController = new ProdutoController();
+
+            foreach ($necessario as $produtoId => $item) {
+                $produto = $produtoController->buscar($produtoId);
+
+                if ($produto === null) {
+                    return ['sucesso' => false, 'mensagem' => "O produto \"{$item['nome']}\" foi excluído e não pode mais ser vendido. Cancele este pedido."];
+                }
+
+                if ((int) $produto['estoque_atual'] < $item['quantidade']) {
+                    return ['sucesso' => false, 'mensagem' => "Estoque insuficiente de \"{$item['nome']}\" para concluir este pedido."];
                 }
             }
         }
 
-        $this->pedidoModel->atualizarStatus($id, $statusAtual, $novoStatus, $usuarioId);
+        try {
+            $this->pedidoModel->atualizarStatus($id, $statusAtual, $novoStatus, $usuarioId);
+        } catch (EstoqueInsuficienteException $e) {
+            // Outra venda levou o estoque entre a conferência acima e a baixa; nada foi alterado
+            return ['sucesso' => false, 'mensagem' => 'Estoque insuficiente para concluir este pedido. Outra venda pode ter usado o estoque agora há pouco.'];
+        } catch (RegraDeNegocioException $e) {
+            return ['sucesso' => false, 'mensagem' => $e->getMessage()];
+        }
 
         return ['sucesso' => true, 'mensagem' => $novoStatus === 'concluido' ? 'Pedido concluído — estoque baixado.' : 'Pedido cancelado.'];
     }

@@ -22,7 +22,11 @@ switch ($acao) {
         redirecionar('pedidos.php');
 
     case 'status':
-        $_SESSION['mensagem'] = $controller->atualizarStatus((int) ($_GET['id'] ?? 0), $_GET['status'] ?? '', (int) $_SESSION['usuario_id']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirecionar('pedidos.php');
+        }
+
+        $_SESSION['mensagem'] = $controller->atualizarStatus((int) ($_POST['id'] ?? 0), campoTexto($_POST, 'status'), (int) $_SESSION['usuario_id']);
 
         redirecionar('pedidos.php');
 

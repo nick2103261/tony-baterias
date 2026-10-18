@@ -10,6 +10,7 @@
 <?= alertaFlash() ?>
 
 <form method="POST" action="fornecedores.php?acao=salvar" class="form">
+    <?= campoCsrf() ?>
     <?php if ($editando): ?>
         <input type="hidden" name="id" value="<?= $fornecedor['id'] ?>">
     <?php endif; ?>

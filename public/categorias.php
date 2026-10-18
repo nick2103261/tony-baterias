@@ -6,14 +6,19 @@ $controller = new CategoriaController();
 $acao = $_GET['acao'] ?? 'listar';
 
 if ($acao === 'salvar' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    $_SESSION['mensagem'] = $controller->criar($_POST['nome'] ?? '');
+    $_SESSION['mensagem'] = $controller->criar(campoTexto($_POST, 'nome'));
 
     redirecionar('categorias.php');
 }
 
 if ($acao === 'excluir') {
-    $controller->excluir((int) ($_GET['id'] ?? 0));
-    $_SESSION['mensagem'] = ['sucesso' => true, 'mensagem' => 'Categoria excluída com sucesso.'];
+    exigirAdmin();
+
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        redirecionar('categorias.php');
+    }
+
+    $_SESSION['mensagem'] = $controller->excluir((int) ($_POST['id'] ?? 0));
 
     redirecionar('categorias.php');
 }

@@ -22,8 +22,11 @@ switch ($acao) {
         redirecionar('usuarios.php');
 
     case 'excluir':
-        $controller->excluir((int) ($_GET['id'] ?? 0));
-        $_SESSION['mensagem'] = ['sucesso' => true, 'mensagem' => 'Usuário excluído com sucesso.'];
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirecionar('usuarios.php');
+        }
+
+        $_SESSION['mensagem'] = $controller->excluir((int) ($_POST['id'] ?? 0), (int) $_SESSION['usuario_id']);
 
         redirecionar('usuarios.php');
 

@@ -22,6 +22,14 @@ class Fornecedor
         return $stmt->fetch() ?: null;
     }
 
+    public function buscarPorCnpj(string $cnpj): ?array
+    {
+        $stmt = $this->db->prepare('SELECT id FROM fornecedores WHERE cnpj = ? AND ativo = 1');
+        $stmt->execute([$cnpj]);
+
+        return $stmt->fetch() ?: null;
+    }
+
     // $dados: nome, contato, cnpj
     public function criar(array $dados): void
     {
@@ -35,9 +43,11 @@ class Fornecedor
         $stmt->execute($dados + ['id' => $id]);
     }
 
-    public function inativar(int $id): void
+    public function inativar(int $id): bool
     {
-        $stmt = $this->db->prepare('UPDATE fornecedores SET ativo = 0 WHERE id = ?');
+        $stmt = $this->db->prepare('UPDATE fornecedores SET ativo = 0 WHERE id = ? AND ativo = 1');
         $stmt->execute([$id]);
+
+        return $stmt->rowCount() > 0;
     }
 }

@@ -18,11 +18,11 @@ class EstoqueController
 
     public function registrarMovimentacao(array $post, int $usuarioId): array
     {
-        $produtoId    = (int) ($post['produto_id'] ?? 0);
-        $tipo         = $post['tipo'] ?? '';
-        $quantidade   = (int) ($post['quantidade'] ?? 0);
-        $fornecedorId = (int) ($post['fornecedor_id'] ?? 0) ?: null;
-        $observacao   = trim($post['observacao'] ?? '') ?: null;
+        $produtoId    = (int) campoTexto($post, 'produto_id');
+        $tipo         = campoTexto($post, 'tipo');
+        $quantidade   = (int) campoTexto($post, 'quantidade');
+        $fornecedorId = (int) campoTexto($post, 'fornecedor_id') ?: null;
+        $observacao   = campoTexto($post, 'observacao');
 
         $produto = $this->produtoController->buscar($produtoId);
 
@@ -38,11 +38,23 @@ class EstoqueController
             return ['sucesso' => false, 'mensagem' => 'Informe uma quantidade maior que zero.'];
         }
 
-        if ($tipo === 'saida' && (int) $produto['estoque_atual'] < $quantidade) {
-            return ['sucesso' => false, 'mensagem' => 'Estoque insuficiente para essa saída.'];
+        if ($quantidade > LIMITE_QUANTIDADE) {
+            return ['sucesso' => false, 'mensagem' => 'A quantidade aceita no máximo ' . number_format(LIMITE_QUANTIDADE, 0, ',', '.') . ' unidades por movimentação.'];
         }
 
-        $this->movimentacaoModel->registrar($produtoId, $usuarioId, $tipo, $quantidade, $fornecedorId, $observacao);
+        if (mb_strlen($observacao) > 255) {
+            return ['sucesso' => false, 'mensagem' => 'A observação aceita no máximo 255 caracteres.'];
+        }
+
+        if ($tipo === 'entrada' && $fornecedorId !== null && (new FornecedorController())->buscar($fornecedorId) === null) {
+            return ['sucesso' => false, 'mensagem' => 'Fornecedor inválido.'];
+        }
+
+        try {
+            $this->movimentacaoModel->registrar($produtoId, $usuarioId, $tipo, $quantidade, $fornecedorId, textoOuNulo($observacao));
+        } catch (EstoqueInsuficienteException $e) {
+            return ['sucesso' => false, 'mensagem' => 'Estoque insuficiente para essa saída.'];
+        }
 
         return ['sucesso' => true, 'mensagem' => $tipo === 'entrada' ? 'Entrada registrada com sucesso.' : 'Saída registrada com sucesso.'];
     }

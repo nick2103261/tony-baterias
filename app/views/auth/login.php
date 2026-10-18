@@ -38,6 +38,7 @@ unset($_SESSION['erro_login']);
                 <?php endif; ?>
 
                 <form method="POST" action="login.php">
+                    <?= campoCsrf() ?>
                     <div class="campo">
                         <label for="email">E-mail</label>
                         <input type="email" id="email" name="email" required autofocus autocomplete="username"

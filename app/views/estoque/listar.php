@@ -11,6 +11,7 @@
         <h2>Registrar movimentação</h2>
     </div>
     <form method="POST" action="estoque.php" id="form-movimentacao" class="painel__corpo">
+        <?= campoCsrf() ?>
         <div class="campos" style="grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));">
             <div class="campo">
                 <label for="produto_id">Produto</label>

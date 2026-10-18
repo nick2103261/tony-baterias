@@ -13,6 +13,7 @@
             <h2>Nova categoria</h2>
         </div>
         <form method="POST" action="categorias.php?acao=salvar" class="painel__corpo">
+            <?= campoCsrf() ?>
             <div class="campo">
                 <label for="nome">Nome</label>
                 <input type="text" id="nome" name="nome" required placeholder="Baterias de moto">
@@ -36,12 +37,9 @@
                                 <td class="cel-principal"><?= htmlspecialchars($categoria['nome']) ?></td>
                                 <td class="cel-acoes">
                                     <div class="acoes">
-                                        <a href="categorias.php?acao=excluir&id=<?= $categoria['id'] ?>"
-                                           class="acao acao--perigo"
-                                           title="Excluir"
-                                           onclick="return confirm('Excluir esta categoria? Produtos que a usam ficam sem categoria.');">
-                                            <?= icone('excluir', 16) ?><span>Excluir</span>
-                                        </a>
+                                        <?php if (ehAdmin()): ?>
+                                            <?= botaoAcao('categorias.php?acao=excluir', ['id' => $categoria['id']], 'excluir', 'Excluir', 'acao--perigo', 'Excluir esta categoria? Produtos que a usam ficam sem categoria.') ?>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>

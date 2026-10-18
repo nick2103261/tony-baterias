@@ -178,9 +178,11 @@
     margin-left: auto;
     flex-shrink: 0;
 
+    border: 0;
     border-radius: var(--raio);
     color: #8c8977;
-
+    background: none;
+    cursor: pointer;
 }
 
 .lateral__sair:hover {

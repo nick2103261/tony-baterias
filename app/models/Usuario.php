@@ -30,9 +30,25 @@ class Usuario
         return $stmt->fetch() ?: null;
     }
 
+    public function contarAdminsAtivos(): int
+    {
+        return (int) $this->db->query("SELECT COUNT(*) FROM usuarios WHERE perfil = 'admin' AND ativo = 1")->fetchColumn();
+    }
+
     // $dados: nome, email, senha (já em hash), perfil
+    // Se o e-mail já pertencia a um usuário excluído, o cadastro antigo volta a valer com os dados novos
     public function criar(array $dados): void
     {
+        $stmt = $this->db->prepare('SELECT id FROM usuarios WHERE email = ? AND ativo = 0');
+        $stmt->execute([$dados['email']]);
+        $excluido = $stmt->fetchColumn();
+
+        if ($excluido !== false) {
+            $stmt = $this->db->prepare('UPDATE usuarios SET nome = :nome, email = :email, senha = :senha, perfil = :perfil, ativo = 1 WHERE id = :id');
+            $stmt->execute($dados + ['id' => (int) $excluido]);
+            return;
+        }
+
         $stmt = $this->db->prepare('INSERT INTO usuarios (nome, email, senha, perfil) VALUES (:nome, :email, :senha, :perfil)');
         $stmt->execute($dados);
     }
@@ -49,9 +65,11 @@ class Usuario
         $stmt->execute([$senhaHash, $id]);
     }
 
-    public function inativar(int $id): void
+    public function inativar(int $id): bool
     {
-        $stmt = $this->db->prepare('UPDATE usuarios SET ativo = 0 WHERE id = ?');
+        $stmt = $this->db->prepare('UPDATE usuarios SET ativo = 0 WHERE id = ? AND ativo = 1');
         $stmt->execute([$id]);
+
+        return $stmt->rowCount() > 0;
     }
 }

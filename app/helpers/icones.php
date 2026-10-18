@@ -139,3 +139,21 @@ function badgeStatus(string $status): string
 
     return '<span class="badge ' . $badges[$status][0] . '">' . $badges[$status][1] . '</span>';
 }
+
+// Botão de ação (excluir, concluir, cancelar) que envia um formulário POST com o token de segurança
+function botaoAcao(string $destino, array $campos, string $nomeIcone, string $rotulo, string $classe = '', string $confirmacao = ''): string
+{
+    $html = '<form method="POST" action="' . htmlspecialchars($destino) . '" class="form-linha">' . campoCsrf();
+
+    foreach ($campos as $nome => $valor) {
+        $html .= '<input type="hidden" name="' . htmlspecialchars((string) $nome) . '" value="' . htmlspecialchars((string) $valor) . '">';
+    }
+
+    $aviso = $confirmacao !== ''
+        ? ' onclick="return confirm(' . htmlspecialchars(json_encode($confirmacao, JSON_UNESCAPED_UNICODE), ENT_QUOTES) . ');"'
+        : '';
+
+    return $html
+        . '<button type="submit" class="acao ' . htmlspecialchars($classe) . '" title="' . htmlspecialchars($rotulo) . '"' . $aviso . '>'
+        . icone($nomeIcone, 16) . '<span>' . htmlspecialchars($rotulo) . '</span></button></form>';
+}

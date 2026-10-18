@@ -95,6 +95,11 @@
 
 }
 
+button.acao {
+    padding: 0;
+    font: inherit;
+}
+
 .acao:hover {
     background-color: var(--superficie);
     border-color: var(--linha-forte);

@@ -10,6 +10,7 @@
 <?= alertaFlash() ?>
 
 <form method="POST" action="produtos.php?acao=salvar" class="form">
+    <?= campoCsrf() ?>
     <?php if ($editando): ?>
         <input type="hidden" name="id" value="<?= $produto['id'] ?>">
     <?php endif; ?>

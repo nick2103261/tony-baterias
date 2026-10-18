@@ -29,11 +29,22 @@ class ClienteController
         // Campos em branco viram NULL no banco
         $dados = [];
         foreach (['nome', 'cpf', 'cnpj', 'telefone', 'email', 'endereco'] as $campo) {
-            $dados[$campo] = trim($post[$campo] ?? '') ?: null;
+            $dados[$campo] = textoOuNulo(campoTexto($post, $campo));
         }
 
         if ($dados['nome'] === null) {
             return ['sucesso' => false, 'mensagem' => 'O nome do cliente é obrigatório.'];
+        }
+
+        $erroTamanho = erroDeTamanho($dados, [
+            'nome'     => [150, 'nome'],
+            'telefone' => [20, 'telefone'],
+            'email'    => [150, 'e-mail'],
+            'endereco' => [255, 'endereço'],
+        ]);
+
+        if ($erroTamanho !== null) {
+            return ['sucesso' => false, 'mensagem' => $erroTamanho];
         }
 
         if ($dados['cpf'] !== null && $dados['cnpj'] !== null) {
@@ -56,6 +67,19 @@ class ClienteController
             return ['sucesso' => false, 'mensagem' => 'Informe o CPF ou o CNPJ do cliente — esse dado é obrigatório para emissão de nota fiscal.'];
         }
 
+        // Grava sempre com a mesma pontuação, para o mesmo documento não ser cadastrado duas vezes
+        if ($dados['cpf'] !== null) {
+            $dados['cpf'] = formatarCpf($dados['cpf']);
+        }
+
+        if ($dados['cnpj'] !== null) {
+            $dados['cnpj'] = formatarCnpj($dados['cnpj']);
+        }
+
+        if ($id !== null && $this->clienteModel->buscarPorId($id) === null) {
+            return ['sucesso' => false, 'mensagem' => 'Cliente não encontrado.'];
+        }
+
         try {
             if ($id === null) {
                 $this->clienteModel->criar($dados);
@@ -72,8 +96,12 @@ class ClienteController
         }
     }
 
-    public function excluir(int $id): void
+    public function excluir(int $id): array
     {
-        $this->clienteModel->inativar($id);
+        if (!$this->clienteModel->inativar($id)) {
+            return ['sucesso' => false, 'mensagem' => 'Cliente não encontrado.'];
+        }
+
+        return ['sucesso' => true, 'mensagem' => 'Cliente excluído com sucesso.'];
     }
 }

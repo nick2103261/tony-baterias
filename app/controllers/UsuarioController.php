@@ -21,13 +21,22 @@ class UsuarioController
 
     public function salvar(array $post, ?int $id): array
     {
-        $nome   = trim($post['nome'] ?? '');
-        $email  = trim($post['email'] ?? '');
-        $senha  = $post['senha'] ?? '';
-        $perfil = $post['perfil'] ?? '';
+        $nome   = campoTexto($post, 'nome');
+        $email  = campoTexto($post, 'email');
+        $senha  = campoTexto($post, 'senha', false);
+        $perfil = campoTexto($post, 'perfil');
 
         if ($nome === '') {
             return ['sucesso' => false, 'mensagem' => 'O nome do usuário é obrigatório.'];
+        }
+
+        $erroTamanho = erroDeTamanho(['nome' => $nome, 'email' => $email], [
+            'nome'  => [100, 'nome'],
+            'email' => [150, 'e-mail'],
+        ]);
+
+        if ($erroTamanho !== null) {
+            return ['sucesso' => false, 'mensagem' => $erroTamanho];
         }
 
         if (!emailValido($email)) {
@@ -42,8 +51,26 @@ class UsuarioController
             return ['sucesso' => false, 'mensagem' => 'A senha deve ter pelo menos 6 caracteres.'];
         }
 
+        // O bcrypt ignora tudo depois de 72 bytes, então senhas maiores seriam "cortadas" sem aviso
+        if (strlen($senha) > 72) {
+            return ['sucesso' => false, 'mensagem' => 'A senha deve ter no máximo 72 caracteres.'];
+        }
+
         if ($id === null && $senha === '') {
             return ['sucesso' => false, 'mensagem' => 'A senha é obrigatória para novos usuários.'];
+        }
+
+        if ($id !== null) {
+            $atual = $this->usuarioModel->buscarPorId($id);
+
+            if ($atual === null) {
+                return ['sucesso' => false, 'mensagem' => 'Usuário não encontrado.'];
+            }
+
+            // Sempre precisa sobrar um administrador para gerenciar o sistema
+            if ($atual['perfil'] === 'admin' && $perfil !== 'admin' && $this->usuarioModel->contarAdminsAtivos() <= 1) {
+                return ['sucesso' => false, 'mensagem' => 'Não é possível rebaixar o único administrador.'];
+            }
         }
 
         $dados = ['nome' => $nome, 'email' => $email, 'perfil' => $perfil];
@@ -70,8 +97,24 @@ class UsuarioController
         }
     }
 
-    public function excluir(int $id): void
+    public function excluir(int $id, int $usuarioLogadoId): array
     {
+        $usuario = $this->usuarioModel->buscarPorId($id);
+
+        if ($usuario === null) {
+            return ['sucesso' => false, 'mensagem' => 'Usuário não encontrado.'];
+        }
+
+        if ($id === $usuarioLogadoId) {
+            return ['sucesso' => false, 'mensagem' => 'Você não pode excluir o seu próprio usuário.'];
+        }
+
+        if ($usuario['perfil'] === 'admin' && $this->usuarioModel->contarAdminsAtivos() <= 1) {
+            return ['sucesso' => false, 'mensagem' => 'Não é possível excluir o único administrador.'];
+        }
+
         $this->usuarioModel->inativar($id);
+
+        return ['sucesso' => true, 'mensagem' => 'Usuário excluído com sucesso.'];
     }
 }

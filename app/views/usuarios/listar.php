@@ -38,12 +38,9 @@
                                     <a href="usuarios.php?acao=form&id=<?= $usuario['id'] ?>" class="acao" title="Editar e trocar senha">
                                         <?= icone('editar', 16) ?><span>Editar</span>
                                     </a>
-                                    <a href="usuarios.php?acao=excluir&id=<?= $usuario['id'] ?>"
-                                       class="acao acao--perigo"
-                                       title="Excluir"
-                                       onclick="return confirm('Excluir este usuário?');">
-                                        <?= icone('excluir', 16) ?><span>Excluir</span>
-                                    </a>
+                                    <?php if ((int) $usuario['id'] !== (int) $_SESSION['usuario_id']): ?>
+                                        <?= botaoAcao('usuarios.php?acao=excluir', ['id' => $usuario['id']], 'excluir', 'Excluir', 'acao--perigo', 'Excluir este usuário?') ?>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>

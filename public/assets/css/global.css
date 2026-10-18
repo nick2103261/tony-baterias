@@ -213,3 +213,8 @@ img {
     background-color: var(--amarelo-fundo);
     color: var(--amarelo-texto);
 }
+
+/* Formulário de uma linha só (botões de ação e "Sair"): não ocupa espaço próprio no layout */
+.form-linha {
+    display: contents;
+}

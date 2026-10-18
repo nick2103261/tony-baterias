@@ -36,12 +36,9 @@
                                     <a href="clientes.php?acao=form&id=<?= $cliente['id'] ?>" class="acao" title="Editar">
                                         <?= icone('editar', 16) ?><span>Editar</span>
                                     </a>
-                                    <a href="clientes.php?acao=excluir&id=<?= $cliente['id'] ?>"
-                                       class="acao acao--perigo"
-                                       title="Excluir"
-                                       onclick="return confirm('Excluir este cliente?');">
-                                        <?= icone('excluir', 16) ?><span>Excluir</span>
-                                    </a>
+                                    <?php if (ehAdmin()): ?>
+                                        <?= botaoAcao('clientes.php?acao=excluir', ['id' => $cliente['id']], 'excluir', 'Excluir', 'acao--perigo', 'Excluir este cliente?') ?>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>

@@ -44,25 +44,10 @@
                                         <a href="pedidos.php?acao=form&id=<?= $pedido['id'] ?>" class="acao" title="Editar">
                                             <?= icone('editar', 16) ?><span>Editar</span>
                                         </a>
-                                        <a href="pedidos.php?acao=status&id=<?= $pedido['id'] ?>&status=concluido"
-                                           class="acao acao--ok"
-                                           title="Concluir"
-                                           onclick="return confirm('Concluir esta venda? O estoque dos itens será baixado.');">
-                                            <?= icone('sucesso', 16) ?><span>Concluir</span>
-                                        </a>
-                                        <a href="pedidos.php?acao=status&id=<?= $pedido['id'] ?>&status=cancelado"
-                                           class="acao acao--perigo"
-                                           title="Cancelar"
-                                           onclick="return confirm('Cancelar este pedido?');">
-                                            <?= icone('cancelar', 16) ?><span>Cancelar</span>
-                                        </a>
+                                        <?= botaoAcao('pedidos.php?acao=status', ['id' => $pedido['id'], 'status' => 'concluido'], 'sucesso', 'Concluir', 'acao--ok', 'Concluir esta venda? O estoque dos itens será baixado.') ?>
+                                        <?= botaoAcao('pedidos.php?acao=status', ['id' => $pedido['id'], 'status' => 'cancelado'], 'cancelar', 'Cancelar', 'acao--perigo', 'Cancelar este pedido?') ?>
                                     <?php elseif ($pedido['status'] === 'concluido'): ?>
-                                        <a href="pedidos.php?acao=status&id=<?= $pedido['id'] ?>&status=cancelado"
-                                           class="acao acao--perigo"
-                                           title="Cancelar"
-                                           onclick="return confirm('Cancelar esta venda? O estoque baixado será devolvido.');">
-                                            <?= icone('cancelar', 16) ?><span>Cancelar</span>
-                                        </a>
+                                        <?= botaoAcao('pedidos.php?acao=status', ['id' => $pedido['id'], 'status' => 'cancelado'], 'cancelar', 'Cancelar', 'acao--perigo', 'Cancelar esta venda? O estoque baixado será devolvido.') ?>
                                     <?php endif; ?>
                                 </div>
                             </td>

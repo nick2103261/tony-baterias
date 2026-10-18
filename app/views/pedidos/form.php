@@ -37,6 +37,7 @@ function linhaItem(array $produtos, int $produtoId = 0, int $quantidade = 1): st
 <?= alertaFlash() ?>
 
 <form method="POST" action="pedidos.php?acao=salvar" id="form-pedido" class="form">
+    <?= campoCsrf() ?>
     <?php if ($editando): ?>
         <input type="hidden" name="id" value="<?= $pedido['id'] ?>">
     <?php endif; ?>

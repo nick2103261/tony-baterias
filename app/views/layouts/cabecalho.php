@@ -59,9 +59,12 @@ $grupoAtual  = '';
                     <div class="lateral__nome"><?= htmlspecialchars($nomeUsuario) ?></div>
                     <div class="lateral__perfil"><?= $_SESSION['usuario_perfil'] === 'admin' ? 'Administrador' : 'Vendedor' ?></div>
                 </div>
-                <a href="logout.php" class="lateral__sair" title="Sair" aria-label="Sair">
-                    <?= icone('sair', 18) ?>
-                </a>
+                <form method="POST" action="logout.php" class="form-linha">
+                    <?= campoCsrf() ?>
+                    <button type="submit" class="lateral__sair" title="Sair" aria-label="Sair">
+                        <?= icone('sair', 18) ?>
+                    </button>
+                </form>
             </div>
         </aside>
         <div class="lateral__fundo" id="lateral-fundo"></div>

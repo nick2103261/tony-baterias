@@ -6,7 +6,7 @@ if (usuarioLogado()) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    (new AuthController())->login($_POST['email'] ?? '', $_POST['senha'] ?? '');
+    (new AuthController())->login(campoTexto($_POST, 'email'), campoTexto($_POST, 'senha', false));
 }
 
 require __DIR__ . '/../app/views/auth/login.php';

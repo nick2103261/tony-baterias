@@ -34,12 +34,9 @@
                                     <a href="fornecedores.php?acao=form&id=<?= $fornecedor['id'] ?>" class="acao" title="Editar">
                                         <?= icone('editar', 16) ?><span>Editar</span>
                                     </a>
-                                    <a href="fornecedores.php?acao=excluir&id=<?= $fornecedor['id'] ?>"
-                                       class="acao acao--perigo"
-                                       title="Excluir"
-                                       onclick="return confirm('Excluir este fornecedor?');">
-                                        <?= icone('excluir', 16) ?><span>Excluir</span>
-                                    </a>
+                                    <?php if (ehAdmin()): ?>
+                                        <?= botaoAcao('fornecedores.php?acao=excluir', ['id' => $fornecedor['id']], 'excluir', 'Excluir', 'acao--perigo', 'Excluir este fornecedor?') ?>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>

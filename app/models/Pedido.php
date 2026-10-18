@@ -19,6 +19,22 @@ class Pedido
         )->fetchAll();
     }
 
+    public function listarRecentes(int $limite): array
+    {
+        return $this->db->query(
+            "SELECT p.*, c.nome AS cliente_nome
+             FROM pedidos p
+             LEFT JOIN clientes c ON c.id = p.cliente_id
+             ORDER BY p.criado_em DESC, p.id DESC
+             LIMIT {$limite}"
+        )->fetchAll();
+    }
+
+    public function contarPendentes(): int
+    {
+        return (int) $this->db->query("SELECT COUNT(*) FROM pedidos WHERE status = 'pendente'")->fetchColumn();
+    }
+
     public function buscarPorId(int $id): ?array
     {
         $stmt = $this->db->prepare(
@@ -61,7 +77,9 @@ class Pedido
 
             $this->db->commit();
         } catch (Throwable $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
             throw $e;
         }
     }
@@ -71,6 +89,14 @@ class Pedido
         $this->db->beginTransaction();
 
         try {
+            // Trava o pedido e confere o status de novo: ele pode ter sido concluído enquanto o formulário estava aberto
+            $stmt = $this->db->prepare('SELECT status FROM pedidos WHERE id = ? FOR UPDATE');
+            $stmt->execute([$id]);
+
+            if ($stmt->fetchColumn() !== 'pendente') {
+                throw new RegraDeNegocioException('Só é possível editar um pedido enquanto ele está pendente.');
+            }
+
             $stmt = $this->db->prepare(
                 'UPDATE pedidos
                  SET cliente_id = ?, forma_pagamento = ?, observacao = ?
@@ -85,23 +111,42 @@ class Pedido
 
             $this->db->commit();
         } catch (Throwable $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
             throw $e;
         }
     }
 
-    // Concluir baixa o estoque dos itens; cancelar uma venda concluída devolve
+    // Concluir baixa o estoque dos itens; cancelar uma venda concluída devolve.
+    // Tudo acontece numa transação só: se algo falhar, nem o status nem o estoque mudam.
     public function atualizarStatus(int $id, string $statusAtual, string $novoStatus, int $usuarioId): void
     {
-        $stmt = $this->db->prepare('UPDATE pedidos SET status = ? WHERE id = ?');
-        $stmt->execute([$novoStatus, $id]);
+        $this->db->beginTransaction();
 
-        if ($statusAtual === 'pendente' && $novoStatus === 'concluido') {
-            $this->moverEstoqueDosItens($id, $usuarioId, 'saida', "Venda - Pedido #{$id}");
-        }
+        try {
+            // "AND status = ?" garante que só uma das requisições (ex.: duplo clique) consegue fazer a mudança
+            $stmt = $this->db->prepare('UPDATE pedidos SET status = ? WHERE id = ? AND status = ?');
+            $stmt->execute([$novoStatus, $id, $statusAtual]);
 
-        if ($statusAtual === 'concluido' && $novoStatus === 'cancelado') {
-            $this->moverEstoqueDosItens($id, $usuarioId, 'entrada', "Cancelamento - Pedido #{$id}");
+            if ($stmt->rowCount() === 0) {
+                throw new RegraDeNegocioException('O status deste pedido mudou enquanto você mexia nele. Atualize a página e confira.');
+            }
+
+            if ($statusAtual === 'pendente' && $novoStatus === 'concluido') {
+                $this->moverEstoqueDosItens($id, $usuarioId, 'saida', "Venda - Pedido #{$id}");
+            }
+
+            if ($statusAtual === 'concluido' && $novoStatus === 'cancelado') {
+                $this->moverEstoqueDosItens($id, $usuarioId, 'entrada', "Cancelamento - Pedido #{$id}");
+            }
+
+            $this->db->commit();
+        } catch (Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $e;
         }
     }
 
@@ -110,11 +155,16 @@ class Pedido
     {
         $stmt = $this->db->prepare(
             'INSERT INTO itens_pedido (pedido_id, produto_id, quantidade, preco_unitario)
-             SELECT ?, id, ?, preco FROM produtos WHERE id = ?'
+             SELECT ?, id, ?, preco FROM produtos WHERE id = ? AND ativo = 1'
         );
 
         foreach ($itens as $item) {
             $stmt->execute([$pedidoId, $item['quantidade'], $item['produto_id']]);
+
+            // Produto inexistente ou excluído não insere nada: melhor falhar do que salvar um pedido sem o item
+            if ($stmt->rowCount() !== 1) {
+                throw new RegraDeNegocioException('Um dos produtos do pedido não existe mais. Atualize a página e refaça o pedido.');
+            }
         }
 
         $stmt = $this->db->prepare(

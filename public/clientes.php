@@ -22,8 +22,13 @@ switch ($acao) {
         redirecionar('clientes.php');
 
     case 'excluir':
-        $controller->excluir((int) ($_GET['id'] ?? 0));
-        $_SESSION['mensagem'] = ['sucesso' => true, 'mensagem' => 'Cliente excluído com sucesso.'];
+        exigirAdmin();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirecionar('clientes.php');
+        }
+
+        $_SESSION['mensagem'] = $controller->excluir((int) ($_POST['id'] ?? 0));
 
         redirecionar('clientes.php');
 

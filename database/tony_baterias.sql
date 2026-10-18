@@ -52,8 +52,8 @@ CREATE TABLE IF NOT EXISTS `fornecedores` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `fornecedores` (`id`, `nome`, `contato`, `cnpj`, `ativo`, `criado_em`, `atualizado_em`) VALUES
-(1, 'Heliar Distribuidora SP', '(11) 3456-7890', '12.345.678/0001-90', 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
-(2, 'Acdelco Centro-Oeste', '(11) 2345-6789', '23.456.789/0001-01', 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
+(1, 'Heliar Distribuidora SP', '(11) 3456-7890', '12.345.678/0001-95', 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
+(2, 'Acdelco Centro-Oeste', '(11) 2345-6789', '23.456.789/0001-95', 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
 (3, 'Distribuidora Pururuca Ltda', '(11) 4567-8901', NULL, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47');
 
 DROP TABLE IF EXISTS `itens_pedido`;
@@ -126,6 +126,7 @@ CREATE TABLE IF NOT EXISTS `produtos` (
   `atualizado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `sku` (`sku`),
+  CONSTRAINT `chk_estoque_nao_negativo` CHECK (`estoque_atual` >= 0),
   KEY `fk_produtos_categoria` (`categoria_id`),
   KEY `idx_produtos_nome` (`nome`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -137,6 +138,16 @@ INSERT INTO `produtos` (`id`, `categoria_id`, `nome`, `descricao`, `marca`, `sku
 (4, 1, 'Bateria Semi-Nova 60Ah', 'Bateria seminova revisada, 60Ah', NULL, 'BAT-SNV-60', 150.00, 3, 4, 2, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
 (5, 1, 'Heliar 60Ah', 'Bateria Heliar 60Ah original', 'Heliar', 'BAT-HEL-60', 410.00, 18, 6, 3, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
 (6, 4, 'Pururuca Tradicional', 'Petisco tradicional vendido no balcão', NULL, NULL, 25.00, 0, 15, 5, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47');
+
+DROP TABLE IF EXISTS `tentativas_login`;
+CREATE TABLE IF NOT EXISTS `tentativas_login` (
+  `id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `email` varchar(150) NOT NULL,
+  `ip` varchar(45) NOT NULL,
+  `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_tentativas_ip_data` (`ip`,`criado_em`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS `usuarios`;
 CREATE TABLE IF NOT EXISTS `usuarios` (

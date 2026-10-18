@@ -37,17 +37,29 @@ class Produto
     }
 
     // $dados: categoria_id, nome, descricao, marca, sku, preco, garantia_meses, estoque_minimo
+    // O produto e o estoque inicial são gravados juntos: ou entram os dois, ou nenhum.
     public function criar(array $dados, int $estoqueInicial, int $usuarioId): void
     {
-        $stmt = $this->db->prepare(
-            'INSERT INTO produtos (categoria_id, nome, descricao, marca, sku, preco, garantia_meses, estoque_minimo)
-             VALUES (:categoria_id, :nome, :descricao, :marca, :sku, :preco, :garantia_meses, :estoque_minimo)'
-        );
-        $stmt->execute($dados);
+        $this->db->beginTransaction();
 
-        if ($estoqueInicial > 0) {
-            $movimentacao = new MovimentacaoEstoque();
-            $movimentacao->registrar((int) $this->db->lastInsertId(), $usuarioId, 'entrada', $estoqueInicial, null, 'Estoque inicial do produto');
+        try {
+            $stmt = $this->db->prepare(
+                'INSERT INTO produtos (categoria_id, nome, descricao, marca, sku, preco, garantia_meses, estoque_minimo)
+                 VALUES (:categoria_id, :nome, :descricao, :marca, :sku, :preco, :garantia_meses, :estoque_minimo)'
+            );
+            $stmt->execute($dados);
+
+            if ($estoqueInicial > 0) {
+                $movimentacao = new MovimentacaoEstoque();
+                $movimentacao->registrar((int) $this->db->lastInsertId(), $usuarioId, 'entrada', $estoqueInicial, null, 'Estoque inicial do produto');
+            }
+
+            $this->db->commit();
+        } catch (Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $e;
         }
     }
 
@@ -62,9 +74,12 @@ class Produto
         $stmt->execute($dados + ['id' => $id]);
     }
 
-    public function inativar(int $id): void
+    // Libera o SKU: ele é único no banco e um produto excluído não precisa mais dele
+    public function inativar(int $id): bool
     {
-        $stmt = $this->db->prepare('UPDATE produtos SET ativo = 0 WHERE id = ?');
+        $stmt = $this->db->prepare('UPDATE produtos SET ativo = 0, sku = NULL WHERE id = ? AND ativo = 1');
         $stmt->execute([$id]);
+
+        return $stmt->rowCount() > 0;
     }
 }

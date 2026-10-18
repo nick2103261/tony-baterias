@@ -9,10 +9,19 @@ class MovimentacaoEstoque
         $this->db = BancoDados::getConnection();
     }
 
-    // $tipo: 'entrada' soma no estoque do produto, 'saida' subtrai
+    // $tipo: 'entrada' soma no estoque do produto, 'saida' subtrai.
+    // Se já houver uma transação aberta (ex.: concluir um pedido), participa dela em vez de abrir outra.
     public function registrar(int $produtoId, int $usuarioId, string $tipo, int $quantidade, ?int $fornecedorId, ?string $observacao = null): void
     {
-        $this->db->beginTransaction();
+        if ($quantidade <= 0) {
+            throw new InvalidArgumentException('A quantidade da movimentação deve ser maior que zero.');
+        }
+
+        $abriuTransacao = !$this->db->inTransaction();
+
+        if ($abriuTransacao) {
+            $this->db->beginTransaction();
+        }
 
         try {
             $stmt = $this->db->prepare(
@@ -21,13 +30,26 @@ class MovimentacaoEstoque
             );
             $stmt->execute([$produtoId, $usuarioId, $tipo === 'entrada' ? $fornecedorId : null, $tipo, $quantidade, $observacao]);
 
-            $operador = $tipo === 'entrada' ? '+' : '-';
-            $stmt = $this->db->prepare("UPDATE produtos SET estoque_atual = estoque_atual {$operador} ? WHERE id = ?");
-            $stmt->execute([$quantidade, $produtoId]);
+            if ($tipo === 'entrada') {
+                $stmt = $this->db->prepare('UPDATE produtos SET estoque_atual = estoque_atual + ? WHERE id = ?');
+                $stmt->execute([$quantidade, $produtoId]);
+            } else {
+                // A própria condição do UPDATE impede o estoque de ficar negativo, mesmo com duas vendas ao mesmo tempo
+                $stmt = $this->db->prepare('UPDATE produtos SET estoque_atual = estoque_atual - ? WHERE id = ? AND estoque_atual >= ?');
+                $stmt->execute([$quantidade, $produtoId, $quantidade]);
 
-            $this->db->commit();
+                if ($stmt->rowCount() === 0) {
+                    throw new EstoqueInsuficienteException('Estoque insuficiente para essa saída.');
+                }
+            }
+
+            if ($abriuTransacao) {
+                $this->db->commit();
+            }
         } catch (Throwable $e) {
-            $this->db->rollBack();
+            if ($abriuTransacao && $this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
             throw $e;
         }
     }

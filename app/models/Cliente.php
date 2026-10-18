@@ -23,8 +23,23 @@ class Cliente
     }
 
     // $dados: nome, cpf, cnpj, telefone, email, endereco
+    // Se o CPF/CNPJ já pertencia a um cliente excluído, o cadastro antigo volta a valer com os dados novos
     public function criar(array $dados): void
     {
+        $stmt = $this->db->prepare('SELECT id FROM clientes WHERE ativo = 0 AND (cpf = :cpf OR cnpj = :cnpj) LIMIT 1');
+        $stmt->execute(['cpf' => $dados['cpf'], 'cnpj' => $dados['cnpj']]);
+        $excluido = $stmt->fetchColumn();
+
+        if ($excluido !== false) {
+            $stmt = $this->db->prepare(
+                'UPDATE clientes
+                 SET nome = :nome, cpf = :cpf, cnpj = :cnpj, telefone = :telefone, email = :email, endereco = :endereco, ativo = 1
+                 WHERE id = :id'
+            );
+            $stmt->execute($dados + ['id' => (int) $excluido]);
+            return;
+        }
+
         $stmt = $this->db->prepare(
             'INSERT INTO clientes (nome, cpf, cnpj, telefone, email, endereco)
              VALUES (:nome, :cpf, :cnpj, :telefone, :email, :endereco)'
@@ -55,9 +70,11 @@ class Cliente
         return $stmt->fetchAll();
     }
 
-    public function inativar(int $id): void
+    public function inativar(int $id): bool
     {
-        $stmt = $this->db->prepare('UPDATE clientes SET ativo = 0 WHERE id = ?');
+        $stmt = $this->db->prepare('UPDATE clientes SET ativo = 0 WHERE id = ? AND ativo = 1');
         $stmt->execute([$id]);
+
+        return $stmt->rowCount() > 0;
     }
 }
