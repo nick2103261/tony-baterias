@@ -67,7 +67,7 @@ class FornecedorController
 
     public function excluir(int $id): array
     {
-        if (!$this->fornecedorModel->inativar($id)) {
+        if (!$this->fornecedorModel->excluir($id)) {
             return ['sucesso' => false, 'mensagem' => 'Fornecedor não encontrado.'];
         }
 

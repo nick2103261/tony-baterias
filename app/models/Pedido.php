@@ -155,7 +155,7 @@ class Pedido
     {
         $stmt = $this->db->prepare(
             'INSERT INTO itens_pedido (pedido_id, produto_id, quantidade, preco_unitario)
-             SELECT ?, id, ?, preco FROM produtos WHERE id = ? AND ativo = 1'
+             SELECT ?, id, ?, preco FROM produtos WHERE id = ?'
         );
 
         foreach ($itens as $item) {

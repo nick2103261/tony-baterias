@@ -11,7 +11,7 @@ class Usuario
 
     public function buscarPorEmail(string $email): ?array
     {
-        $stmt = $this->db->prepare('SELECT id, nome, email, senha, perfil FROM usuarios WHERE email = ? AND ativo = 1');
+        $stmt = $this->db->prepare('SELECT id, nome, email, senha, perfil FROM usuarios WHERE email = ?');
         $stmt->execute([$email]);
 
         return $stmt->fetch() ?: null;
@@ -19,36 +19,25 @@ class Usuario
 
     public function listarTodos(): array
     {
-        return $this->db->query('SELECT id, nome, email, perfil FROM usuarios WHERE ativo = 1 ORDER BY nome')->fetchAll();
+        return $this->db->query('SELECT id, nome, email, perfil FROM usuarios ORDER BY nome')->fetchAll();
     }
 
     public function buscarPorId(int $id): ?array
     {
-        $stmt = $this->db->prepare('SELECT id, nome, email, perfil FROM usuarios WHERE id = ? AND ativo = 1');
+        $stmt = $this->db->prepare('SELECT id, nome, email, perfil FROM usuarios WHERE id = ?');
         $stmt->execute([$id]);
 
         return $stmt->fetch() ?: null;
     }
 
-    public function contarAdminsAtivos(): int
+    public function contarAdmins(): int
     {
-        return (int) $this->db->query("SELECT COUNT(*) FROM usuarios WHERE perfil = 'admin' AND ativo = 1")->fetchColumn();
+        return (int) $this->db->query("SELECT COUNT(*) FROM usuarios WHERE perfil = 'admin'")->fetchColumn();
     }
 
     // $dados: nome, email, senha (já em hash), perfil
-    // Se o e-mail já pertencia a um usuário excluído, o cadastro antigo volta a valer com os dados novos
     public function criar(array $dados): void
     {
-        $stmt = $this->db->prepare('SELECT id FROM usuarios WHERE email = ? AND ativo = 0');
-        $stmt->execute([$dados['email']]);
-        $excluido = $stmt->fetchColumn();
-
-        if ($excluido !== false) {
-            $stmt = $this->db->prepare('UPDATE usuarios SET nome = :nome, email = :email, senha = :senha, perfil = :perfil, ativo = 1 WHERE id = :id');
-            $stmt->execute($dados + ['id' => (int) $excluido]);
-            return;
-        }
-
         $stmt = $this->db->prepare('INSERT INTO usuarios (nome, email, senha, perfil) VALUES (:nome, :email, :senha, :perfil)');
         $stmt->execute($dados);
     }
@@ -65,9 +54,10 @@ class Usuario
         $stmt->execute([$senhaHash, $id]);
     }
 
-    public function inativar(int $id): bool
+    // Usuário que já fez pedido ou movimentou estoque não pode ser apagado (ON DELETE RESTRICT): o erro sobe para o controller
+    public function excluir(int $id): bool
     {
-        $stmt = $this->db->prepare('UPDATE usuarios SET ativo = 0 WHERE id = ? AND ativo = 1');
+        $stmt = $this->db->prepare('DELETE FROM usuarios WHERE id = ?');
         $stmt->execute([$id]);
 
         return $stmt->rowCount() > 0;

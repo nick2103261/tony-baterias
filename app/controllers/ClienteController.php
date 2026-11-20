@@ -98,7 +98,7 @@ class ClienteController
 
     public function excluir(int $id): array
     {
-        if (!$this->clienteModel->inativar($id)) {
+        if (!$this->clienteModel->excluir($id)) {
             return ['sucesso' => false, 'mensagem' => 'Cliente não encontrado.'];
         }
 

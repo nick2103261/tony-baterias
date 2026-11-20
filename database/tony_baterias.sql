@@ -25,7 +25,6 @@ CREATE TABLE IF NOT EXISTS `clientes` (
   `telefone` varchar(20) DEFAULT NULL,
   `email` varchar(150) DEFAULT NULL,
   `endereco` varchar(255) DEFAULT NULL,
-  `ativo` tinyint(1) NOT NULL DEFAULT '1',
   `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `atualizado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -34,9 +33,9 @@ CREATE TABLE IF NOT EXISTS `clientes` (
   KEY `idx_clientes_nome` (`nome`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `clientes` (`id`, `nome`, `cpf`, `cnpj`, `telefone`, `email`, `endereco`, `ativo`, `criado_em`, `atualizado_em`) VALUES
-(1, 'João Pereira', '529.982.247-25', NULL, '(11) 98888-1111', 'joao.pereira@example.com', NULL, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
-(2, 'Oficina Mecânica Silva', NULL, '11.222.333/0001-81', '(11) 97777-2222', 'contato@oficinasilva.example.com', NULL, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47');
+INSERT INTO `clientes` (`id`, `nome`, `cpf`, `cnpj`, `telefone`, `email`, `endereco`, `criado_em`, `atualizado_em`) VALUES
+(1, 'João Pereira', '529.982.247-25', NULL, '(11) 98888-1111', 'joao.pereira@example.com', NULL, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
+(2, 'Oficina Mecânica Silva', NULL, '11.222.333/0001-81', '(11) 97777-2222', 'contato@oficinasilva.example.com', NULL, '2026-09-21 10:45:47', '2026-09-21 10:45:47');
 
 DROP TABLE IF EXISTS `fornecedores`;
 CREATE TABLE IF NOT EXISTS `fornecedores` (
@@ -44,17 +43,16 @@ CREATE TABLE IF NOT EXISTS `fornecedores` (
   `nome` varchar(150) NOT NULL,
   `contato` varchar(100) DEFAULT NULL,
   `cnpj` varchar(18) DEFAULT NULL,
-  `ativo` tinyint(1) NOT NULL DEFAULT '1',
   `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `atualizado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_fornecedores_nome` (`nome`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `fornecedores` (`id`, `nome`, `contato`, `cnpj`, `ativo`, `criado_em`, `atualizado_em`) VALUES
-(1, 'Heliar Distribuidora SP', '(11) 3456-7890', '12.345.678/0001-95', 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
-(2, 'Acdelco Centro-Oeste', '(11) 2345-6789', '23.456.789/0001-95', 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
-(3, 'Distribuidora Pururuca Ltda', '(11) 4567-8901', NULL, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47');
+INSERT INTO `fornecedores` (`id`, `nome`, `contato`, `cnpj`, `criado_em`, `atualizado_em`) VALUES
+(1, 'Heliar Distribuidora SP', '(11) 3456-7890', '12.345.678/0001-95', '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
+(2, 'Acdelco Centro-Oeste', '(11) 2345-6789', '23.456.789/0001-95', '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
+(3, 'Distribuidora Pururuca Ltda', '(11) 4567-8901', NULL, '2026-09-21 10:45:47', '2026-09-21 10:45:47');
 
 DROP TABLE IF EXISTS `itens_pedido`;
 CREATE TABLE IF NOT EXISTS `itens_pedido` (
@@ -121,7 +119,6 @@ CREATE TABLE IF NOT EXISTS `produtos` (
   `garantia_meses` smallint UNSIGNED NOT NULL DEFAULT '0',
   `estoque_atual` int NOT NULL DEFAULT '0',
   `estoque_minimo` int NOT NULL DEFAULT '0',
-  `ativo` tinyint(1) NOT NULL DEFAULT '1',
   `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `atualizado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -131,13 +128,13 @@ CREATE TABLE IF NOT EXISTS `produtos` (
   KEY `idx_produtos_nome` (`nome`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `produtos` (`id`, `categoria_id`, `nome`, `descricao`, `marca`, `sku`, `preco`, `garantia_meses`, `estoque_atual`, `estoque_minimo`, `ativo`, `criado_em`, `atualizado_em`) VALUES
-(1, 1, 'Acdelco 50Ah', 'Bateria Acdelco 50Ah, ideal para carros de passeio', 'Acdelco', 'BAT-ACD-50', 320.00, 12, 8, 3, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
-(2, 1, 'Acdelco 60Ah', 'Bateria Acdelco 60Ah, alta durabilidade', 'Acdelco', 'BAT-ACD-60', 380.00, 12, 5, 3, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
-(3, 1, 'Bateria Semi-Nova 45Ah', 'Bateria seminova revisada, 45Ah', NULL, 'BAT-SNV-45', 150.00, 3, 2, 2, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
-(4, 1, 'Bateria Semi-Nova 60Ah', 'Bateria seminova revisada, 60Ah', NULL, 'BAT-SNV-60', 150.00, 3, 4, 2, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
-(5, 1, 'Heliar 60Ah', 'Bateria Heliar 60Ah original', 'Heliar', 'BAT-HEL-60', 410.00, 18, 6, 3, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
-(6, 4, 'Pururuca Tradicional', 'Petisco tradicional vendido no balcão', NULL, NULL, 25.00, 0, 15, 5, 1, '2026-09-21 10:45:47', '2026-09-21 10:45:47');
+INSERT INTO `produtos` (`id`, `categoria_id`, `nome`, `descricao`, `marca`, `sku`, `preco`, `garantia_meses`, `estoque_atual`, `estoque_minimo`, `criado_em`, `atualizado_em`) VALUES
+(1, 1, 'Acdelco 50Ah', 'Bateria Acdelco 50Ah, ideal para carros de passeio', 'Acdelco', 'BAT-ACD-50', 320.00, 12, 8, 3, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
+(2, 1, 'Acdelco 60Ah', 'Bateria Acdelco 60Ah, alta durabilidade', 'Acdelco', 'BAT-ACD-60', 380.00, 12, 5, 3, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
+(3, 1, 'Bateria Semi-Nova 45Ah', 'Bateria seminova revisada, 45Ah', NULL, 'BAT-SNV-45', 150.00, 3, 2, 2, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
+(4, 1, 'Bateria Semi-Nova 60Ah', 'Bateria seminova revisada, 60Ah', NULL, 'BAT-SNV-60', 150.00, 3, 4, 2, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
+(5, 1, 'Heliar 60Ah', 'Bateria Heliar 60Ah original', 'Heliar', 'BAT-HEL-60', 410.00, 18, 6, 3, '2026-09-21 10:45:47', '2026-09-21 10:45:47'),
+(6, 4, 'Pururuca Tradicional', 'Petisco tradicional vendido no balcão', NULL, NULL, 25.00, 0, 15, 5, '2026-09-21 10:45:47', '2026-09-21 10:45:47');
 
 DROP TABLE IF EXISTS `tentativas_login`;
 CREATE TABLE IF NOT EXISTS `tentativas_login` (
@@ -156,16 +153,15 @@ CREATE TABLE IF NOT EXISTS `usuarios` (
   `email` varchar(150) NOT NULL,
   `senha` varchar(255) NOT NULL,
   `perfil` enum('admin','vendedor') NOT NULL DEFAULT 'vendedor',
-  `ativo` tinyint(1) NOT NULL DEFAULT '1',
   `criado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `atualizado_em` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `usuarios` (`id`, `nome`, `email`, `senha`, `perfil`, `ativo`, `criado_em`, `atualizado_em`) VALUES
-(1, 'Tony', 'admin@tonybaterias.com', '$2b$10$FejHXJbjYNCjjutO.UHU.OTQ51MpF4qEfbfoSJGkee7BFpVa545q6', 'admin', 1, '2026-09-21 10:45:47', '2026-09-28 18:18:16'),
-(2, 'Funcionário', 'funcionario@email.com', '$2b$10$qdoPJIZM1jT5hKdcBEkxaOr8DTcQikRZLKXSefn.JEaMCZMUqok8K', 'vendedor', 1, '2026-09-21 11:53:33', '2026-09-28 18:18:16');
+INSERT INTO `usuarios` (`id`, `nome`, `email`, `senha`, `perfil`, `criado_em`, `atualizado_em`) VALUES
+(1, 'Tony', 'admin@tonybaterias.com', '$2b$10$FejHXJbjYNCjjutO.UHU.OTQ51MpF4qEfbfoSJGkee7BFpVa545q6', 'admin', '2026-09-21 10:45:47', '2026-09-28 18:18:16'),
+(2, 'Funcionário', 'funcionario@email.com', '$2b$10$qdoPJIZM1jT5hKdcBEkxaOr8DTcQikRZLKXSefn.JEaMCZMUqok8K', 'vendedor', '2026-09-21 11:53:33', '2026-09-28 18:18:16');
 
 -- DADOS DE DEMONSTRAÇÃO: 7 pedidos concluídos (R$ 2.655,00 em outubro/2026), 1 cancelado e 1 reposição de estoque.
 -- Para um banco sem esses dados, apague daqui até a linha "FIM DOS DADOS DE DEMONSTRAÇÃO".

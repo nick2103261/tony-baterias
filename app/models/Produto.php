@@ -15,14 +15,13 @@ class Produto
             'SELECT p.*, c.nome AS categoria_nome
              FROM produtos p
              LEFT JOIN categorias c ON c.id = p.categoria_id
-             WHERE p.ativo = 1
              ORDER BY p.nome'
         )->fetchAll();
     }
 
     public function buscarPorId(int $id): ?array
     {
-        $stmt = $this->db->prepare('SELECT * FROM produtos WHERE id = ? AND ativo = 1');
+        $stmt = $this->db->prepare('SELECT * FROM produtos WHERE id = ?');
         $stmt->execute([$id]);
 
         return $stmt->fetch() ?: null;
@@ -30,7 +29,7 @@ class Produto
 
     public function buscarPorSku(string $sku): ?array
     {
-        $stmt = $this->db->prepare('SELECT id FROM produtos WHERE sku = ? AND ativo = 1');
+        $stmt = $this->db->prepare('SELECT id FROM produtos WHERE sku = ?');
         $stmt->execute([$sku]);
 
         return $stmt->fetch() ?: null;
@@ -74,10 +73,11 @@ class Produto
         $stmt->execute($dados + ['id' => $id]);
     }
 
-    // Libera o SKU: ele é único no banco e um produto excluído não precisa mais dele
-    public function inativar(int $id): bool
+    // Apaga o produto e o histórico de estoque dele (ON DELETE CASCADE).
+    // Produto que já foi vendido não pode ser apagado (ON DELETE RESTRICT): o banco recusa e o erro sobe para o controller
+    public function excluir(int $id): bool
     {
-        $stmt = $this->db->prepare('UPDATE produtos SET ativo = 0, sku = NULL WHERE id = ? AND ativo = 1');
+        $stmt = $this->db->prepare('DELETE FROM produtos WHERE id = ?');
         $stmt->execute([$id]);
 
         return $stmt->rowCount() > 0;

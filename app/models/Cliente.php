@@ -11,35 +11,20 @@ class Cliente
 
     public function listarTodos(): array
     {
-        return $this->db->query('SELECT * FROM clientes WHERE ativo = 1 ORDER BY nome')->fetchAll();
+        return $this->db->query('SELECT * FROM clientes ORDER BY nome')->fetchAll();
     }
 
     public function buscarPorId(int $id): ?array
     {
-        $stmt = $this->db->prepare('SELECT * FROM clientes WHERE id = ? AND ativo = 1');
+        $stmt = $this->db->prepare('SELECT * FROM clientes WHERE id = ?');
         $stmt->execute([$id]);
 
         return $stmt->fetch() ?: null;
     }
 
     // $dados: nome, cpf, cnpj, telefone, email, endereco
-    // Se o CPF/CNPJ já pertencia a um cliente excluído, o cadastro antigo volta a valer com os dados novos
     public function criar(array $dados): void
     {
-        $stmt = $this->db->prepare('SELECT id FROM clientes WHERE ativo = 0 AND (cpf = :cpf OR cnpj = :cnpj) LIMIT 1');
-        $stmt->execute(['cpf' => $dados['cpf'], 'cnpj' => $dados['cnpj']]);
-        $excluido = $stmt->fetchColumn();
-
-        if ($excluido !== false) {
-            $stmt = $this->db->prepare(
-                'UPDATE clientes
-                 SET nome = :nome, cpf = :cpf, cnpj = :cnpj, telefone = :telefone, email = :email, endereco = :endereco, ativo = 1
-                 WHERE id = :id'
-            );
-            $stmt->execute($dados + ['id' => (int) $excluido]);
-            return;
-        }
-
         $stmt = $this->db->prepare(
             'INSERT INTO clientes (nome, cpf, cnpj, telefone, email, endereco)
              VALUES (:nome, :cpf, :cnpj, :telefone, :email, :endereco)'
@@ -70,9 +55,10 @@ class Cliente
         return $stmt->fetchAll();
     }
 
-    public function inativar(int $id): bool
+    // Os pedidos do cliente continuam no sistema, só ficam sem cliente (ON DELETE SET NULL)
+    public function excluir(int $id): bool
     {
-        $stmt = $this->db->prepare('UPDATE clientes SET ativo = 0 WHERE id = ? AND ativo = 1');
+        $stmt = $this->db->prepare('DELETE FROM clientes WHERE id = ?');
         $stmt->execute([$id]);
 
         return $stmt->rowCount() > 0;

@@ -112,7 +112,16 @@ class ProdutoController
 
     public function excluir(int $id): array
     {
-        if (!$this->produtoModel->inativar($id)) {
+        try {
+            $apagou = $this->produtoModel->excluir($id);
+        } catch (PDOException $e) {
+            if ($e->getCode() === '23000') {
+                return ['sucesso' => false, 'mensagem' => 'Este produto já foi vendido e não pode ser excluído.'];
+            }
+            throw $e;
+        }
+
+        if (!$apagou) {
             return ['sucesso' => false, 'mensagem' => 'Produto não encontrado.'];
         }
 

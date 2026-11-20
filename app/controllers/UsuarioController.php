@@ -68,7 +68,7 @@ class UsuarioController
             }
 
             // Sempre precisa sobrar um administrador para gerenciar o sistema
-            if ($atual['perfil'] === 'admin' && $perfil !== 'admin' && $this->usuarioModel->contarAdminsAtivos() <= 1) {
+            if ($atual['perfil'] === 'admin' && $perfil !== 'admin' && $this->usuarioModel->contarAdmins() <= 1) {
                 return ['sucesso' => false, 'mensagem' => 'Não é possível rebaixar o único administrador.'];
             }
         }
@@ -109,11 +109,18 @@ class UsuarioController
             return ['sucesso' => false, 'mensagem' => 'Você não pode excluir o seu próprio usuário.'];
         }
 
-        if ($usuario['perfil'] === 'admin' && $this->usuarioModel->contarAdminsAtivos() <= 1) {
+        if ($usuario['perfil'] === 'admin' && $this->usuarioModel->contarAdmins() <= 1) {
             return ['sucesso' => false, 'mensagem' => 'Não é possível excluir o único administrador.'];
         }
 
-        $this->usuarioModel->inativar($id);
+        try {
+            $this->usuarioModel->excluir($id);
+        } catch (PDOException $e) {
+            if ($e->getCode() === '23000') {
+                return ['sucesso' => false, 'mensagem' => 'Este usuário já tem pedidos ou movimentações de estoque e não pode ser excluído.'];
+            }
+            throw $e;
+        }
 
         return ['sucesso' => true, 'mensagem' => 'Usuário excluído com sucesso.'];
     }

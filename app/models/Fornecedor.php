@@ -11,12 +11,12 @@ class Fornecedor
 
     public function listarTodos(): array
     {
-        return $this->db->query('SELECT * FROM fornecedores WHERE ativo = 1 ORDER BY nome')->fetchAll();
+        return $this->db->query('SELECT * FROM fornecedores ORDER BY nome')->fetchAll();
     }
 
     public function buscarPorId(int $id): ?array
     {
-        $stmt = $this->db->prepare('SELECT * FROM fornecedores WHERE id = ? AND ativo = 1');
+        $stmt = $this->db->prepare('SELECT * FROM fornecedores WHERE id = ?');
         $stmt->execute([$id]);
 
         return $stmt->fetch() ?: null;
@@ -24,7 +24,7 @@ class Fornecedor
 
     public function buscarPorCnpj(string $cnpj): ?array
     {
-        $stmt = $this->db->prepare('SELECT id FROM fornecedores WHERE cnpj = ? AND ativo = 1');
+        $stmt = $this->db->prepare('SELECT id FROM fornecedores WHERE cnpj = ?');
         $stmt->execute([$cnpj]);
 
         return $stmt->fetch() ?: null;
@@ -43,9 +43,10 @@ class Fornecedor
         $stmt->execute($dados + ['id' => $id]);
     }
 
-    public function inativar(int $id): bool
+    // O histórico de estoque continua, só fica sem fornecedor (ON DELETE SET NULL)
+    public function excluir(int $id): bool
     {
-        $stmt = $this->db->prepare('UPDATE fornecedores SET ativo = 0 WHERE id = ? AND ativo = 1');
+        $stmt = $this->db->prepare('DELETE FROM fornecedores WHERE id = ?');
         $stmt->execute([$id]);
 
         return $stmt->rowCount() > 0;
